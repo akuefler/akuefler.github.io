@@ -18,9 +18,9 @@ plotter = gui.plotter
 
 #Create a root figure
 plotter.addFig('Master',
-title='Project Title',
-xlabel='x', ylabel='y',
-domain=([0,10],[-2,1.5]))
+    title='Project Title',
+    xlabel='x', ylabel='y',
+    domain=([0,10],[-2,1.5]))
 
 #Add layers to Master figure with titles.
 plotter.addLayer('exp1_data', figure = 'Master')
@@ -28,11 +28,11 @@ plotter.addLayer('exp2_data', figure = 'Master')
 
 #Create a single axes object at 11, containing our layers.
 plotter.arrangeFig([1,1], {'11':
-{'name': 'Two Experiments',
-'scale': ([0,10],[-2,1.5]),
-'layers': ['exp1_data','exp2_data'],
-'axes_vars': ['x', 'y']}
-})
+    {'name': 'Two Experiments',
+    'scale': ([0,10],[-2,1.5]),
+    'layers': ['exp1_data','exp2_data'],
+    'axes_vars': ['x', 'y']}
+    })
 
 gui.buildPlotter2D((8,8), with_times=False)
 
