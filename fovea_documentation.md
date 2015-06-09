@@ -1,6 +1,6 @@
-###INSTALLATION
+##INSTALLATION
 
-###INTRODUCTION
+##INTRODUCTION
 
 Dynamical systems play an important role in many scientific fields, but models of such systems can feature many parameters and variables that are confusing to first time users. Fovea is a python package for assisting researchers in the process of building intuition about dynamical systems implemented in algorithms. The package consists of five files.
 
@@ -57,14 +57,72 @@ _diagnosticGUI_ takes an instance of plotter2D in its constructor and provides u
 
 #####5. domain2D.py
 
-###COMMANDS
+##COMMANDS
 
-###EXAMPLES
+###Graphics
 
-###TUTORIALS
+####Class Line_GUI
+Line of interest context_object for GUI.
 
-###README
+#####Methods:
+######distance_to_pos(self, dist)
+Calculate absolute (x, y) position of distance _dist_ from (x1, y1) along the line instance.
 
-###LICENSE
+######fraction_to_pos(self, fraction)
+Calculate absolute (x,y) position of fractional distance _fraction_ (0-1) from (x1, y1) along line
+
+######make_event_def(self, uniquename, dircode=0)
+Binds an event to this instance of line_GUI, which is triggered when the line is crossed by some trajectory. _uniquename_ determines the name of the event and _dircode_ specifies whether the event should be triggered by a crossing from the left, right, or either (must be -1, 0 or 1).
+
+######unshow(self)
+Make this line instance invisible.
+
+
+#####fovea.graphics.plotter2D.setLayer(self, label, figure=None, **kwargs)
+Arrange data sets in a figure's layer
+
+Change or reset properties of an existing layer named _label_. Note that plotter2D.show() must be called afterwards in order to update layer axes.
+
+Valid kwargs:
+_data_
+numpy array of numeric data
+
+_dynamic_
+boolean variable
+
+_zindex_
+_style_
+Maximum two character string indicating color and/or style of plotted data (e.g., "r." for a red dot) 
+
+_display_
+boolean determining visibility of layer
+
+_axes\_vars_
+List of strings labeling each axis.
+
+_handles_
+Dictionary of mpl handles belonging to artists in the layer.
+
+_trajs_
+_scale_
+_kind_
+string indicating kind of information displayed in this layer (e.g., "text", "data").
+
+##EXAMPLES
+
+Bombadier
+
+User key commands (defined in bombardier.GUIrocket.key_on):
+_g_
+Runs the simulation with current angle and velocity
+
+_l_
+Click and hold to create a new line_GUI object as a straight line in the current axes. The new instance of line_GUI is stored in GUIRocket.context_objects and game#.selected_object.
+
+##TUTORIALS
+
+##README
+
+##LICENSE
 
 
