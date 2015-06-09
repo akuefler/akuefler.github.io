@@ -78,29 +78,33 @@ Binds an event to this instance of line_GUI, which is triggered when the line is
 Make this line instance invisible.
 
 
-#####fovea.graphics.plotter2D.setLayer(self, label, figure=None, **kwargs)
+####Class Plotter2D
+
+####Methods:
+
+#####setLayer(self, label, figure=None, **kwargs)
 Arrange data sets in a figure's layer
 
 Change or reset properties of an existing layer named _label_. Note that plotter2D.show() must be called afterwards in order to update layer axes.
 
 Valid kwargs:
-_data_
+_data_  
 numpy array of numeric data
 
-_dynamic_
+_dynamic_  
 boolean variable
 
-_zindex_
-_style_
+_zindex_  
+_style_  
 Maximum two character string indicating color and/or style of plotted data (e.g., "r." for a red dot) 
 
-_display_
+_display_  
 boolean determining visibility of layer
 
-_axes\_vars_
+_axes\_vars_  
 List of strings labeling each axis.
 
-_handles_
+_handles_  
 Dictionary of mpl handles belonging to artists in the layer.
 
 _trajs_
@@ -110,13 +114,13 @@ string indicating kind of information displayed in this layer (e.g., "text", "da
 
 ##EXAMPLES
 
-Bombadier
+Bombardier
 
 User key commands (defined in bombardier.GUIrocket.key_on):
-_g_
+_g_  
 Runs the simulation with current angle and velocity
 
-_l_
+_l_  
 Click and hold to create a new line_GUI object as a straight line in the current axes. The new instance of line_GUI is stored in GUIRocket.context_objects and game#.selected_object.
 
 ##TUTORIALS
