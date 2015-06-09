@@ -43,7 +43,7 @@ plotter.addData(dataset2, layer='exp2_data', style='r-')
 plotter.auto_scale_domain(figure='Master')
 plotter.show()
 
-```
+``
 
 Note also that Plotters can be initialized with a diagnostic manager object, which ensure saves are stored on a path visible to the diagnostics tools.
 
@@ -79,6 +79,7 @@ Make this line instance invisible.
 
 
 ####Class Plotter2D
+Responsible for management and creation of Fovea layers and graphical objects contained inside them.
 
 ####Methods:
 
