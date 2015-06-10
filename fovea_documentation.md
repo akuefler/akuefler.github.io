@@ -43,7 +43,7 @@ plotter.addData(dataset2, layer='exp2_data', style='r-')
 plotter.auto_scale_domain(figure='Master')
 plotter.show()
 
-``
+```
 
 Note also that Plotters can be initialized with a diagnostic manager object, which ensure saves are stored on a path visible to the diagnostics tools.
 
@@ -118,11 +118,20 @@ string indicating kind of information displayed in this layer (e.g., "text", "da
 Bombardier
 
 User key commands (defined in bombardier.GUIrocket.key_on):
-_g_  
+_'g'_  
 Runs the simulation with current angle and velocity
 
-_l_  
+_'l'_  
 Click and hold to create a new line_GUI object as a straight line in the current axes. The new instance of line_GUI is stored in GUIRocket.context_objects and game#.selected_object.
+
+_' '_  
+Creates a new selected objected at next clicked mouse point.
+
+__'s'__  
+Snap next clicked mouse point to closes point on trajectory.
+
+__'.'__  
+Click on domain seed point, then initial radius point.
 
 ##TUTORIALS
 
