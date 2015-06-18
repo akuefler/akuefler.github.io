@@ -61,6 +61,20 @@ _diagnosticGUI_ takes an instance of plotter2D in its constructor and provides u
 
 ###Graphics
 
+####MISC NOTES:
+fig_struct is a dictionary produced as the first output of self._resolveFig(figure), it contains the fields: 'domain', 'arrange', 'xlabel', 'window', 'display', 'layers', 'autoscaling', 'title', 'fignum', 'ylabel', 'tdom', 'shape'. These are properties of the master window/ figure itself. It can also be accessed within the plotter2D class with self.figs[figure_name], which is what ._resolveFig does.
+
+    (_So why does resolveFig exist at all?_)
+
+figure, output as the second argument of self._resolveFig(figure), is just a string. The name of the figure fig_struct describes (e.g., 'master')
+
+layer_struct is a dictionary associated with a unique, named layer. It contains the fields: 'scale', 'kind', 'style', 'data', 'dynamic', 'zindex', 'axes_vars', 'trajs', 'display', 'handles'. These are the properties of the layer named in the call to self._resolveLayer(figure, layer). Each layer has its own struct.
+
+The value of the 'data' key in layer_struct is a dictionary, whose keys are 'style' (string), 'display' (boolean) and 'data' (numpy array)
+
+arrangeFig checks if positions of the subplots are consistent with the declared shape, and if so, stores shape and arrange as items in the fig_struct. These are used later to actually build the figure and plots.
+
+
 ####Class Line_GUI
 Line of interest context_object for GUI.
 
@@ -74,14 +88,56 @@ Calculate absolute (x,y) position of fractional distance _fraction_ (0-1) from (
 ######make_event_def(self, uniquename, dircode=0)
 Binds an event to this instance of line_GUI, which is triggered when the line is crossed by some trajectory. _uniquename_ determines the name of the event and _dircode_ specifies whether the event should be triggered by a crossing from the left, right, or either (must be -1, 0 or 1).
 
+####Class diagnosticGUI
+
+####Methods:
+
+####buildPlotter2D
+Creates GUI based on the properties set with arrangeFig. Takes as input a fig_size (integer pair), which gives the width and height of the master window in inches, and with_times (boolean), which determines if a continuous "time slider" widget should be created. Creates core GUI buttons and sets up their callbacks.
+
+subplot_struct contains the values for a subplot at a given position named in the call to arrangeFig
+
 ######unshow(self)
 Make this line instance invisible.
 
 
-####Class Plotter2D
+####Class Plotter2D(figSize, with_times)
 Responsible for management and creation of Fovea layers and graphical objects contained inside them.
 
+List of plotter2D attributes:
+_self.dm_  
+Diagnostic manager object passed into constructor.
+
+_self.save\_status_  
+Boolean
+
+_self.wait\_status_  
+Boolean
+
+_self.figs_  
+Dictionary containing figure names as keys and fig_structs as values.
+
+_self.currFig_  
+
+_self.active\_layer\_structs_
+
 ####Methods:
+
+####addData(self, data, figure=None, layer=None, style=None, name=None, display=True, force=False, log=None)
+"""
+User tool to add data to a named layer (defaults to current active layer).
+*data* consists of a pair of sequences of x, y data values, in the same
+format as would be passed to matplotlib's plot.
+
+Use *force* option only if known that existing data must be overwritten.
+Add a diagnostic manager's log attribute to the optional *log* argument
+to have the figure, layer, and data name recorded in the log.
+
+*display* option (default True) controls whether the data will be
+visible by default.
+"""
+
+Creates a name for the data parameter in this layer, and adds it to layer_struct.data as a dictionary of dictionaries with the builtin update() method defined for dictionaries. The sub-dictionary's keys are 'data' (the np array passed in as an argument), 'style', and 'display'.
 
 #####setLayer(self, label, figure=None, **kwargs)
 Arrange data sets in a figure's layer
@@ -108,16 +164,19 @@ List of strings labeling each axis.
 _handles_  
 Dictionary of mpl handles belonging to artists in the layer.
 
-_trajs_
-_scale_
-_kind_
+_trajs_  
+_scale_  
+_kind_  
 string indicating kind of information displayed in this layer (e.g., "text", "data").
 
 ##EXAMPLES
 
-Bombardier
+###Bombardier
+Bombardier is a simple game that simulates the trajectory of a projectile as it travels past bodies with gravitational fields. The user sets the speed and angle of the projectile before each run and initiates the simulation by pressing the "Go!" button at the bottom left of the window (or pressing the hotkey 'g').
 
-User key commands (defined in bombardier.GUIrocket.key_on):
+Four games are included in the Bombardier example folder (though currently only games 1, 2 and 4 are implemented).
+
+User key commands (defined in bombardier.GUIrocket.key_on):  
 _'g'_  
 Runs the simulation with current angle and velocity
 
