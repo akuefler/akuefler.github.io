@@ -56,6 +56,12 @@ _diagnosticGUI_ takes an instance of plotter2D in its constructor and provides u
 #####4. common.py
 
 #####5. domain2D.py
+class polygon_domain(object):  
+
+grow_step(self, verbose=False):
+Iterates over all of the exterior coordinates of of the domain polygon. Each time, increments the values of the points by a certain step size to create a new point. If the domain criterion function, given this new point, returns a value with the same sign as it would return, given the seed point, the new point is stored. Once all the original polygon points have been compared using boolfunc, a new polygon is made out of all the satisfying points.
+
+self.boolfunc (implicit method). Performs a comparison to see if the output of the domain criterion function for a given input (a point) shares the same sign as the output at the seed point.
 
 ##COMMANDS
 
@@ -139,6 +145,11 @@ visible by default.
 
 Creates a name for the data parameter in this layer, and adds it to layer_struct.data as a dictionary of dictionaries with the builtin update() method defined for dictionaries. The sub-dictionary's keys are 'data' (the np array passed in as an argument), 'style', and 'display'.
 
+#####addLayer(self, layer_name, figure=None, set_to_active=True, **kwargs)
+Add a layer to the figure. layer_names can be created or stored, but they can also be initialized with layer properties such as data, style, scale and kind.
+
+Basically takes a new figure name, and associates with that string its own figure_struct
+
 #####setLayer(self, label, figure=None, **kwargs)
 Arrange data sets in a figure's layer
 
@@ -169,6 +180,10 @@ _scale_
 _kind_  
 string indicating kind of information displayed in this layer (e.g., "text", "data").
 
+#####_subplots(self, layers, fig_name, rebuild= False)
+
+Nested loop over shape provided in fig_struct. Retrieve the subplot_struct ('name', 'projection', 'layers', ... Things defined in arrangeFig) Each time through the loop.
+
 ##EXAMPLES
 
 ###Bombardier
@@ -191,6 +206,13 @@ Snap next clicked mouse point to closes point on trajectory.
 
 __'.'__  
 Click on domain seed point, then initial radius point.
+
+####Class GUIrocket
+
+####Methods:
+
+#####get_forces(self, x, y)
+Function used by mouse_event_force, tied to the ' ' callback.
 
 ##TUTORIALS
 
