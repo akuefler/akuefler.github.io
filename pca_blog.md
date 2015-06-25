@@ -38,8 +38,7 @@ trans_ax = 1
 
 X = [[],[],[]]
 for i in range(3):  
-    X[i] = rotate_z(rotate_y(rotate_x(translate(pts, trans_ax, trans_am),random.uniform(0,  
-        2*np.pi)),random.uniform(0,2*np.pi)),random.uniform(0, 2*np.pi))
+    X[i] = rotate_z(rotate_y(rotate_x(translate(pts, trans_ax, trans_am),    random.uniform(0,2*np.pi)),random.uniform(0,2*np.pi)),random.uniform(0, 2*np.pi))
 ```
 
 We end up with a few sets of points that still sit on 2D discs, but appear to make use of three dimensions.
@@ -63,21 +62,52 @@ Although these data have tricked the x, y, and z axes, visualization makes it ap
 
 PCA’s job is to throw out the x, y and z axes and come up with a new set of axes that line up better with the data. In other words, PCA produces an ordered set of orthogonal vectors (called the principal components or PC’s), such that the first PC points in the direction of greatest variance in the data, the second in the direction of second greatest variance (constrained to be orthogonal to the first), and so forth. It is perfectly valid to come up with a new set that has the same number of vectors as the old one, thus capturing ALL the data’s variance. But the real fun happens when we ask ourselves if we can get away with having fewer axes (dimensions) than we started with.
 
-In pca_disc, it is apparent that the two measly a and b axes can capture the same amount of “interesting stuff” as all three, x, y, and z axes. To convince ourselves, we’ll need some way to rapidly explore how our data look embedded in high-dimensional space and how they look after projection onto axes a and b. Together, Fovea layers and matplotlib’s subplots provide the needed utility.
+In _pca\_disc_, it is apparent that the two measly a and b axes can capture the same amount of “interesting stuff” as all three, x, y, and z axes. To convince ourselves, we’ll need some way to rapidly explore how our data look embedded in high-dimensional space and how they look after projection onto axes a and b. Together, Fovea layers and matplotlib’s subplots provide the needed utility.
 
 ##Setting Up Fovea
 
 Our goal is to set up some nice images showing the “before and after” of a dimensionality reduction as subplots in a figure window. But first we need to decide what kinds of information we want populating our subplots. For the purposes of this tutorial, the layers will correspond to different rotations of our disc and contain four different, but associated, groups of data (before-PCA data, after-PCA data, variance captured by PCA, and the PC’s themselves). Out in the wild, the user may want to reserve each layer for different clusters of a single dataset or different datasets entirely (the possibilities are endless). We can set aside some names and appropriate colors for our layers in a couple lists:
 
-Code Example
+```python
+rot_layers = ['rot1', 'rot2', 'rot3']
+rot_styles = ['r', 'g', 'b']
+```
 
 And the layers can be added to the plotter like so:
 
-Code Example
+```python
+#Setup all layers
+plotter.addLayer('orig_data')
+plotter.addLayer('meta_data', kind='text')
 
-I’ve also included a fourth layer, “orig_data”, to house the original data-disc prior to any rotations. But before we can start populating rot1, rot2, and rot3 with data, we need a figure window and some axes over which our layers will be displayed. pca_disc provides a convenient function, setupDisplay(), which accepts a couple lists of strings (i.e., rot_layers and rot_styles) and arranges a figure with three subplots:
+for rot in rot_layers:
+    plotter.addLayer(clus)
+```
 
-Code Example: ArrangeFig
+I’ve also included a fourth layer, “orig_data”, to house the original data-disc prior to any rotations. But before we can start populating rot1, rot2, and rot3 with data, we need a figure window and some axes over which our layers will be displayed. pca_disc provides a convenient function, _setupDisplay()_, which accepts a couple lists of strings (i.e., rot_layers and rot_styles) and arranges a figure with three subplots:
+
+```python
+plotter.arrangeFig([1,3], {
+    '11':
+        {'name': 'BEFORE',
+        'scale': [(-10,10),(-10,10)],
+        'layers': clus_layers+['orig_data'],  
+        'axes_vars': ['x', 'y', 'z'],
+        'projection':'3d'},
+    '12':
+        {'name': 'AFTER',
+        'scale': [(-20,20),(-20,20)],
+        'layers': clus_layers,  
+        'axes_vars': ['a', 'b']},
+    '13':
+        {'name': 'Variance by Components',
+        'scale': [(0.5,10),(0,1)],
+        'layers': clus_layers,  
+        'axes_vars': ['x', 'y']},
+    })
+```
+
+gui.buildPlotter2D((14,6), with_times=False)
 
 The first subplot, (entitled ‘BEFORE’) will be home to the original 3D disc dataset, some different rotations of the same disc, and a view of the new axes that PCA discovers for each rotation. Note that we set the ‘projection’ parameter for this subplot to ‘3d’ and supply three axes_vars instead of two. This feature is new to Fovea, and allows for provisional plotting of 3D data (with associated perks, like being able to rotate the axes by clicking and dragging). The second plot (“AFTER”) will display a 2D view of how each rotated disc looks after having been projected onto their corresponding PC’s (shown in ‘BEFORE’). Bear in mind that, for the purposes of this user story, two PC’s will always be used to project the “AFTER” data, even if only one PC was more appropriate (say, by stretching the disc far across the x axis). When we move to more dimensions, we’ll also continue using only 2 axes for the “AFTER” plot, but you could also make this plot 3d as well, if PCA discovers 3 strong components.
 
