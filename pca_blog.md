@@ -38,7 +38,8 @@ trans_ax = 1
 
 X = [[],[],[]]
 for i in range(3):  
-    X[i] = rotate_z(rotate_y(rotate_x(translate(pts, trans_ax, trans_am),    random.uniform(0,2*np.pi)),random.uniform(0,2*np.pi)),random.uniform(0, 2*np.pi))
+    X[i] = rotate_z(rotate_y(rotate_x(translate(pts, trans_ax, trans_am),  
+        random.uniform(0,2*np.pi)),random.uniform(0,2*np.pi)),random.uniform(0, 2*np.pi))
 ```
 
 We end up with a few sets of points that still sit on 2D discs, but appear to make use of three dimensions.
@@ -105,9 +106,10 @@ plotter.arrangeFig([1,3], {
         'layers': clus_layers,  
         'axes_vars': ['x', 'y']},
     })
-```
+
 
 gui.buildPlotter2D((14,6), with_times=False)
+```
 
 The first subplot, (entitled ‘BEFORE’) will be home to the original 3D disc dataset, some different rotations of the same disc, and a view of the new axes that PCA discovers for each rotation. Note that we set the ‘projection’ parameter for this subplot to ‘3d’ and supply three axes_vars instead of two. This feature is new to Fovea, and allows for provisional plotting of 3D data (with associated perks, like being able to rotate the axes by clicking and dragging). The second plot (“AFTER”) will display a 2D view of how each rotated disc looks after having been projected onto their corresponding PC’s (shown in ‘BEFORE’). Bear in mind that, for the purposes of this user story, two PC’s will always be used to project the “AFTER” data, even if only one PC was more appropriate (say, by stretching the disc far across the x axis). When we move to more dimensions, we’ll also continue using only 2 axes for the “AFTER” plot, but you could also make this plot 3d as well, if PCA discovers 3 strong components.
 
