@@ -28,7 +28,7 @@ The end result is a list of points looking something like this:
 [ 2.0811796  -0.78464252  0.        ]
 [ 5.65265684  0.11505331  0.        ]
 [ 3.43255688  3.83145878  0.        ]]
-``
+```
 
 One easily spots the slacking z-coordinate. In a perfect world, dimensionality reduction would consist of nothing more than tossing out the zeroes. But when the data have been rotated, or noised up, the problem becomes more apparent. By generating some random angles and composing the _rotate\_x()_, _rotate\_y()_, and _rotate\_z()_ functions (in addition to _translate()_) in _pca\_disc_, like so:
 
@@ -39,7 +39,7 @@ trans_ax = 1
 X = [[],[],[]]
 for i in range(3):
 X[i] = rotate_z(rotate_y(rotate_x(translate(pts, trans_ax, trans_am),random.uniform(0, 2*np.pi)),random.uniform(0, 2*np.pi)),random.uniform(0, 2*np.pi))
-``
+```
 
 We end up with a few sets of points that still sit on 2D discs, but appear to make use of three dimensions.
 
@@ -54,7 +54,7 @@ We end up with a few sets of points that still sit on 2D discs, but appear to ma
 [ 10.0219924    8.51815475   4.83660148]
 [ 12.01924573  11.11940641  -4.34387331]
 [ 13.73158322  12.05803314   2.28344063]]
-``
+```
 
 Although these data have tricked the x, y, and z axes, visualization makes it apparent that we’re expressing our data in more dimensions than we need.
 
