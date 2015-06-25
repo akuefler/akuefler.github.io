@@ -10,11 +10,25 @@ Although I’ve taken the trouble to draw this data-disc in the volume of a cube
 
 Using PyDSTool’s synthetic_data tool and numpy’s concatenate function:
 
-Code example
+```python
+pts = sd.generate_ball(120, 2, 10)
+pts = np.concatenate((pts,np.zeros((120, 1))), axis=1)
+```
 
 The end result is a list of points looking something like this:
 
-Code example
+```
+[[ 5.94061792  3.76256284  0.        ]
+[-0.86465872 -3.35053331  0.        ]
+[ 3.4455166   2.50427016  0.        ]
+[ 7.75243164 -5.58465333  0.        ]
+[ 2.11125897  3.93196272  0.        ]
+[-5.87175514  5.98995138  0.        ]
+[-1.12449966  2.32071201  0.        ]
+[ 2.0811796  -0.78464252  0.        ]
+[ 5.65265684  0.11505331  0.        ]
+[ 3.43255688  3.83145878  0.        ]]
+```
 
 One easily spots the slacking z-coordinate. In a perfect world, dimensionality reduction would consist of nothing more than tossing out the zeroes. But when the data have been rotated, or noised up, the problem becomes more apparent. By generating some random angles and composing the rotate_x, rotate_y, and rotate_z functions in pca_disc, like so:
 
