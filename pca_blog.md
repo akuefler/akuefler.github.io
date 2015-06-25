@@ -38,7 +38,8 @@ trans_ax = 1
 
 X = [[],[],[]]
 for i in range(3):  
-    X[i] = rotate_z(rotate_y(rotate_x(translate(pts, trans_ax, trans_am),random.uniform(0,   2*np.pi)),random.uniform(0,2*np.pi)),random.uniform(0, 2*np.pi))
+    X[i] = rotate_z(rotate_y(rotate_x(translate(pts, trans_ax, trans_am),random.uniform(0,  
+        2*np.pi)),random.uniform(0,2*np.pi)),random.uniform(0, 2*np.pi))
 ```
 
 We end up with a few sets of points that still sit on 2D discs, but appear to make use of three dimensions.
