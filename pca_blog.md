@@ -111,33 +111,90 @@ plotter.arrangeFig([1,3], {
 gui.buildPlotter2D((14,6), with_times=False)
 ```
 
-The first subplot, (entitled ‘BEFORE’) will be home to the original 3D disc dataset, some different rotations of the same disc, and a view of the new axes that PCA discovers for each rotation. Note that we set the ‘projection’ parameter for this subplot to ‘3d’ and supply three axes_vars instead of two. This feature is new to Fovea, and allows for provisional plotting of 3D data (with associated perks, like being able to rotate the axes by clicking and dragging). The second plot (“AFTER”) will display a 2D view of how each rotated disc looks after having been projected onto their corresponding PC’s (shown in ‘BEFORE’). Bear in mind that, for the purposes of this user story, two PC’s will always be used to project the “AFTER” data, even if only one PC was more appropriate (say, by stretching the disc far across the x axis). When we move to more dimensions, we’ll also continue using only 2 axes for the “AFTER” plot, but you could also make this plot 3d as well, if PCA discovers 3 strong components.
+The first subplot, (entitled "BEFORE") will be home to the original 3D disc dataset, some different rotations of the same disc, and a view of the new axes that PCA discovers for each rotation. Note that we set the ‘projection’ parameter for this subplot to ‘3d’ and supply three axes_vars instead of two. This feature is new to Fovea, and allows for provisional plotting of 3D data (with associated perks, like being able to rotate the axes by clicking and dragging). The second plot (“AFTER”) will display a 2D view of how each rotated disc looks after having been projected onto their corresponding PC’s (shown in "BEFORE"). Bear in mind that, for the purposes of this user story, two PC’s will always be used to project the “AFTER” data, even if only one PC was more appropriate (say, by stretching the disc far across the x axis). When we move to more dimensions, we’ll also continue using only 2 axes for the “AFTER” plot, but you could also make this plot 3d as well, if PCA discovers 3 strong components.
 
 As we move to more complicated data sets, it will also be important to assess how much the data are spread along each axis (the variance). Knowing the variance captured by each PC will later let us decide if that dimension is worth keeping around. So we will also set aside a third subplot, ‘Variance by Component’ where this information will eventually be stored. Notice also that every subplot will contain a bit of data from every layer, so the ‘layers’ parameter for each one is simply the list “rot_layers” (with orig_data appended on for the first subplot).
 
-Code example:
+Looping through our list of layers, we can now perform PCA on each rotated dataset using pca/_disc’s _compute()_ function. _compute()_ is makes use of _doPCA()_ – an aptly named function for doing PCA – included in PyDSTool’s data analysis toolbox (imported as ‘da’). You may also wish to create a pcaNode object directly with the python MDP package (which da imports). MDP includes a method for retrieving the data’s projection matrix, whose columns are the principal components we’re after. Another handy method defined for pcaNodes is simply named “d()”, which returns the list of eigenvalues corresponding to the principal components (which we can use to account for how much variance each new dimension explains).
 
-Looping through our list of layers, we can now perform PCA on each rotated dataset using pca_disc’s compute() function
+```python
+#Create a pcaNode object.
+p = da.doPCA(X, len(X[0]), len(X[0]))
 
-Code example:
+#Columns of the projection matrix are the PCs.
+pcMat = p.get_projmatrix()
 
-Here, compute() is making use of doPCA() – an aptly named function for doing PCA – included in PyDSTool’s data analysis toolbox (imported here as ‘da’). You may also wish to create a pcaNode object directly with the python MDP package (which da imports). MDP includes a method for retrieving the data’s projection matrix, whose columns are the principal components we’re after. Another handy method defined for pcaNodes is simply named “d()”, which returns the list of eigenvalues corresponding to the principal components (which we can use to account for how much variance each new dimension explains).
+#Store column vectors to be convenient for plotting as line endpoints.
+pcPts = np.concatenate(([pcMat.transpose()[0,:]*15],  
+    [-pcMat.transpose()[0,:]*15]), axis=0)
 
-Code example
+for j in range(1, new_dim):  
+    pcPts = np.concatenate((pcPts, [pcMat.transpose()[j,:]*15],  
+        [-pcMat.transpose()[j,:]*15]), axis=0)
 
-compute() adds the data (both low and high dimensional), the PC’s, and a plot of variances to their respective layers, and makes use of the optional “subplot” parameter to ensure each group of data ends up on the axes assigned to it.
+#Get data projected onto the 'new_dim' number of PCs.
+Y = p._execute(X, new_dim)
+```
 
-Code example
+_compute()_ adds the data (both low and high dimensional), the PC’s, and a plot of variances to their respective layers, and makes use of the optional “subplot” parameter to ensure each group of data ends up on the axes assigned to it.
 
-At the end of compute(), we loop through all the layers we’ve added and turn off their visibility as a single group (another new feature provided by Fovea), so we have a clean slate when we start interacting with our GUI.
+```python
+#Create plot of high-dimensional data.
+plotter.addData([X[:,0], X[:,1], X[:,2]], layer= layer, style=style+'.', subplot= '11')
 
-Code example
+#Add PC lines to the same subplot as the high-dimensional data.
+for j in range(0, len(pcPts), 2):
+    plotter.addData([pcPts[j+0:j+2,0], pcPts[j+0:j+2,1], pcPts[j+0:j+2,2]], layer= layer, style= style, subplot= '11')
+    plotter.addData([pcPts[j+2:j+4,0], pcPts[j+2:j+4,1], pcPts[j+2:j+4,2]], layer= layer, style= style, subplot= '11')
+
+#Create plot of low-dimensional data.
+plotter.addData([Y[:,0], Y[:,1]], layer=layer, style=style+'.', subplot= '12')
+
+#Create line plot for fraction of variance explained by each component.
+plotter.addData([range(1, len(p.d)+1), p.d/sum(p.d)], layer=layer, style=style+"-o", subplot= '13')
+
+print("Variance Explained in", layer,"with first",new_dim,"components:")
+print(sum(p.d[0:new_dim])/sum(p.d))
+```
+
+At the end of _compute()_, we loop through all the layers we’ve added and turn off their visibility as a single group (another new feature provided by Fovea), so we have a clean slate when we start interacting with our GUI.
+
+```python
+for layer in rot_layers:
+    plotter.setLayer(layer, figure='Master', display=False)
+```
 
 ## Exploratory Analysis
 
 At this point, we can explore our data by clicking and rolling the 3D axes and changing the visibility of the various layers using setLayer. But to make things more user-friendly, it is better to set up some callbacks. For now, this function will respond contextually by cycling through the different rotations when the arrow keys are pressed, hiding the original data when ‘h’ is pressed, and displaying all rotations in response to ‘m’. It can be easily connected to our GUI’s instance of masterWin with “mpl_connect”:
 
-Code example
+```python
+c = 0
+def keypress(event):
+    global c
+
+    if event.key == 'right':
+        c += 1
+    if event.key == 'left':
+        c -= 1
+
+    if event.key == 'left' or event.key == 'right':
+        for layer in rot_layers:
+            plotter.setLayer(layer, figure='Master', display= False)
+
+        plotter.toggleDisplay(layer=rot_layers[c%3], figure='Master')
+
+    if event.key == 'm':
+        for layer in rot_layers:
+            plotter.toggleDisplay(layer=layer, figure='Master')
+
+    if event.key == 'h':
+        plotter.toggleDisplay(layer='orig_data', figure='Master')
+
+    plotter.show(rebuild=False)
+    
+gui.masterWin.canvas.mpl_connect('key_press_event', keypress)
+```
 
 After a bit of playing around with our visualization, a few things should become apparent.
 
@@ -145,16 +202,18 @@ First, each rotation’s PC’s line up beautifully with the data, as one would 
 
 (noisedisc_w_axes)
 (noisedisc_w_axes_edgeon)
+![disc and PC's](https://github.com/akuefler/akuefler.github.io/blob/master/images/PCA_images/noisedisc_w_axes.png?raw=true)
+![dic and PC's, lined up](https://github.com/akuefler/akuefler.github.io/blob/master/images/PCA_images/noisedisc_w_axes_edgeon.png?raw=true)
 
 Second, the subplot “AFTER” projection looks quite a bit like the “BEFORE” image in the 3D axes. We may not be able to swivel it around, but if you turn the high-dimensional data so that it’s flat face is facing toward you, you will have effectively recreated the “AFTER” plot in the “BEFORE” axes (you may need to use the zoom widget to correct the scales).
 
-(faceon)
+![After projection, noiseless 2D data looks the same](https://github.com/akuefler/akuefler.github.io/blob/master/images/PCA_images/noisedisc_w_axes.png?raw=true)
 
 The takeaway message here is that PCA is ultimately just a linear projection (or flattening) of data in one space into some other space. Nothing is intrinsically different – it is merely squished. However, when we start dealing with more dimensions (and we’re forced to view 2D/3D projections of bigger data) the myriad projections we choose to get an impression of the data may all look quite different. In such cases, the ability to compare before and after images (perhaps plotting different projections of the data rather than rotations) can be instrumental.
 
 And third, the “variance by components” plot is very boring. Because we’re plotting an almost perfect disc, the “direction of greatest variance” we use as the first PC has only marginally more variance than the second component. We can spice it up by using pca_disc’s stretch function to skew the data and watch as the graph becomes less even. But as always, the real intrigue happens when we add more dimensions.
 
-(stretches_and_variances)
+![Notice that the angle of the variance line-plot corresponds to amount same-colored disc is skewed](https://github.com/akuefler/akuefler.github.io/blob/master/images/PCA_images/stretches_and_variances.png?raw=true)
 
 ##High-Dimensional Data
 
