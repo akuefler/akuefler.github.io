@@ -144,8 +144,10 @@ plotter.addData([X[:,0], X[:,1], X[:,2]], layer= layer, style=style+'.', subplot
 
 #Add PC lines to the same subplot as the high-dimensional data.
 for j in range(0, len(pcPts), 2):
-    plotter.addData([pcPts[j+0:j+2,0], pcPts[j+0:j+2,1], pcPts[j+0:j+2,2]], layer= layer, style= style, subplot= '11')
-    plotter.addData([pcPts[j+2:j+4,0], pcPts[j+2:j+4,1], pcPts[j+2:j+4,2]], layer= layer, style= style, subplot= '11')
+    plotter.addData([pcPts[j+0:j+2,0], pcPts[j+0:j+2,1], pcPts[j+0:j+2,2]],  
+        layer= layer, style= style, subplot= '11')
+    plotter.addData([pcPts[j+2:j+4,0], pcPts[j+2:j+4,1], pcPts[j+2:j+4,2]],  
+        layer= layer, style= style, subplot= '11')
 
 #Create plot of low-dimensional data.
 plotter.addData([Y[:,0], Y[:,1]], layer=layer, style=style+'.', subplot= '12')
@@ -153,8 +155,6 @@ plotter.addData([Y[:,0], Y[:,1]], layer=layer, style=style+'.', subplot= '12')
 #Create line plot for fraction of variance explained by each component.
 plotter.addData([range(1, len(p.d)+1), p.d/sum(p.d)], layer=layer, style=style+"-o", subplot= '13')
 
-print("Variance Explained in", layer,"with first",new_dim,"components:")
-print(sum(p.d[0:new_dim])/sum(p.d))
 ```
 
 At the end of _compute()_, we loop through all the layers we’ve added and turn off their visibility as a single group (another new feature provided by Fovea), so we have a clean slate when we start interacting with our GUI.
@@ -200,14 +200,12 @@ After a bit of playing around with our visualization, a few things should become
 
 First, each rotation’s PC’s line up beautifully with the data, as one would expect from this surrogate dataset. If you rotate the data-disc to be edge-on, you’ll see that data-points and PC’s all fall in a straight line. If we want to fuzzy-up the disc with the noise function provided in pca_disc, we may lose our straight line, but the PC’s will still point across the breadth of the data, as we would hope.
 
-(noisedisc_w_axes)
-(noisedisc_w_axes_edgeon)
 ![disc and PC's](https://github.com/akuefler/akuefler.github.io/blob/master/images/PCA_images/noisedisc_w_axes.png?raw=true)
 ![dic and PC's, lined up](https://github.com/akuefler/akuefler.github.io/blob/master/images/PCA_images/noisedisc_w_axes_edgeon.png?raw=true)
 
 Second, the subplot “AFTER” projection looks quite a bit like the “BEFORE” image in the 3D axes. We may not be able to swivel it around, but if you turn the high-dimensional data so that it’s flat face is facing toward you, you will have effectively recreated the “AFTER” plot in the “BEFORE” axes (you may need to use the zoom widget to correct the scales).
 
-![After projection, noiseless 2D data looks the same](https://github.com/akuefler/akuefler.github.io/blob/master/images/PCA_images/noisedisc_w_axes.png?raw=true)
+![After projection, noiseless 2D data looks the same](https://github.com/akuefler/akuefler.github.io/blob/master/images/PCA_images/faceon.png?raw=true)
 
 The takeaway message here is that PCA is ultimately just a linear projection (or flattening) of data in one space into some other space. Nothing is intrinsically different – it is merely squished. However, when we start dealing with more dimensions (and we’re forced to view 2D/3D projections of bigger data) the myriad projections we choose to get an impression of the data may all look quite different. In such cases, the ability to compare before and after images (perhaps plotting different projections of the data rather than rotations) can be instrumental.
 
@@ -221,19 +219,34 @@ For most real-world datasets, dimensionality reduction involves sacrifice. Every
 
 Consider how our workflow changes as we move into higher dimensions. Imagine you are a psychologist acutely interested in how frequently members of 3 different populations (children, adolescents, and adults) experience 6 different emotions (joy, sorrow, jealousy, malice, fear, and pride) throughout the day. For convenience, we’ll pretend also that each population’s data can be modeled perfectly as a normally-distributed hypersphere in 6D emotion-space. Now instead of having three rotations of a disc shown in three different colors, our dataset will consist of three distinct hyperspheres (created with synthetic_data) representing the emotional diversity of children (red), adolescents (green) and adults (blue):
 
-Code Example
+```python
+#Create and stretch different hypersphere "clusters":
+X1 = translate(stretch(stretch(sd.generate_ball(133, dim, 10), 0, 1.4), 1, 1.4), 0, 25)
+X2 = translate(sd.generate_ball(110, dim, 10), 1, 20)
+X3 = translate(noise(sd.generate_ball(95, dim, 10), 2, 0.6, 0, 2), 2, 15)
 
-Notice that I’ve also tinkered with the number of datapoints making up each hypersphere (the sample size of that population) and applied pca_disc’s stretch and noise function to give each cluster its own character, as we would expect from three different clusters of a real dataset.
+X = [X1, X2, X3]
+
+clus_layers = ['clus1', 'clus2', 'clus3']
+clus_styles = ['r', 'g', 'b']
+```
+
+Notice that I’ve also tinkered with the number of datapoints making up each hypersphere (the sample size of that population) and applied _pca\_disc_’s stretch, translate and noise function to give each cluster its own character, as we would expect from three different clusters of a real dataset.
 
 Let’s say we suspect our choice of 6 emotions was somewhat arbitrary. Do we really need to give “joy” and “pride” their own axes, or should reports of those feelings all be lumped into a single variable (happiness)? For that matter, don’t “jealousy” and “malice” belong to the same underlying emotion (contempt) as well? PCA is designed to settle questions like these.
 
-But a problem arises when the best set of axes PCA does identify outnumbers the 3 dimensions visible to us mortals. We may have narrowed our 6 emotions down to a more manageable list of 4 (happiness, contempt, fear, sorrow), but that’s little solace if we wish to plot our new dataset in 2D or 3D. However, we may still get a loose impression of how 4D or 6D might look in its natural state by projecting it onto 2 or 3 orthonormal vectors. Methods like Linear Discriminant Analysis can be used to come up with “projection vectors” that yield particularly informative projections of high-dimensional data. But purely for the sake of demonstration, we’ll content ourselves with any 2 or 3 orthonormal projection vectors that transform our 4D (‘AFTER’) and 6D (‘BEFORE’) into 2D and 3D point-clouds that can be drawn in our existing subplots. Two arbitrary orthonormal projection vectors can be found by applying the QR factorization on a random matrix like so:
+But a problem arises when the best set of axes PCA does identify outnumbers the 3 dimensions visible to us mortals. We may have narrowed our 6 emotions down to a more manageable list of 4 (happiness, contempt, fear, sorrow), but that’s little solace if we wish to plot our new dataset in 2D or 3D. However, we may still get a loose impression of how 4D or 6D might look in its natural state by projecting it onto 2 or 3 orthonormal vectors. Methods like Linear Discriminant Analysis can be used to come up with “projection vectors” that yield particularly informative projections of high-dimensional data. But purely for the sake of demonstration, we’ll content ourselves with any 2 or 3 orthonormal projection vectors that transform our 4D (‘AFTER’) and 6D (‘BEFORE’) into 2D and 3D point-clouds that can be drawn in our existing subplots. Two arbitrary orthonormal projection vectors can be found by applying the QR factorization on a random matrix as in _pca\_disc_'s function, _ortho_proj_mat()_:
 
-Example
+```python
+def ortho_proj_mat(n, m):
+    Z = numpy.random.rand(n, m)
+    Q, R = numpy.linalg.qr(Z)
+    return Q
+```
 
-However, when dealing with 6D data, there is more leeway to select how many axes we want our new space to have. For this particular example, the third subplot reveals a sharp gap between the variance explained by the first 2 PCs and the remaining 3. 
+However, when dealing with 6D data, there is more leeway to select how many axes we want our new space to have. For this particular example, the third subplot reveals a sharp gap between the variance explained by the first 2 PCs and the remaining 3 for the X1 (red) dataset. 
 
-(variance_gap)
+![The disparity was created by applying _stretch()_ to X1 along 2 different axes](https://github.com/akuefler/akuefler.github.io/blob/master/images/PCA_images/variance_gap.png?raw=true)
 
 If this were real psychological data, we might conclude that we were too hasty to settle on four new dimensions, when what we really needed was just a “positive emotion” axis and a “negative emotion” axis. Then again, even if two vectors explain a big portion, we would still be throwing out a lot of variance if we ignore the other 3 completely. In other words, the process of picking the best dimensionality is non-deterministic, context-dependent and leaves room for trial and error.
 
@@ -241,16 +254,52 @@ Wouldn’t it then be nice if we could manually select the number of PCs we want
 
 However, as we flit around dimensions, generating different “AFTER” data, and projecting what we find onto our random QR-vectors, we end up with a lot of different variables to keep track of. For instance, even if our projection vectors for displaying 4D data are chosen arbitrary, we still want them to be the same vectors if we hop over to 5D-land for a bit, then come back. Otherwise, viewing the different plots produced by toggling through different dimensions is about as informative as randomly generating the data each time.
 
-Fortunately, Fovea’s object-oriented design makes it easy to add new classes that store and reuse attributes during interactive plotting sessions. Reworking a bit of code from Benjamin Root’s Interactive Applications Using Matplotlib, we can come up with a control system class whose fields include:
+Fortunately, Fovea’s object-oriented design makes it easy to add new classes that store and reuse attributes during interactive plotting sessions. Reworking a bit of code from Benjamin Root’s _Interactive Applications Using Matplotlib_, we can come up with a control system class, _ControlSys_, whose fields include:
 
-d (the number of PC’s we wish to start with),
-c (a counter for keeping track of which hypersphere is on display),
-proj_vecsLO (Two orthonormal vectors for projecting post-PCA data),
-proj_vecsHI (Three orthonormal vectors for projecting pre-PCA data)
+*d* (the number of PC’s we wish to start with),
+*c* (a counter for keeping track of which hypersphere is on display),
+*proj_vecsLO* (Two orthonormal vectors for projecting post-PCA data),
+*proj_vecsHI* (Three orthonormal vectors for projecting pre-PCA data)
 
-This class also comes with a callback method, keypress(), that cycles between layers/clusters (left and right), re-computes PCA in different dimensions (up and down), and changes visibilities (‘m’ and ‘h’).
+This class also includes a modified version of our function, _keypress()_, which now cycles between layers/clusters (left and right), re-computes PCA in different dimensions (up and down), and changes visibilities (‘m’ and ‘h’).
 
-Example:
+```python
+def keypress(self, event):
+
+    if event.key == 'left' or event.key == 'right':
+        if event.key == 'left':
+            self.c += 1
+        else:
+            self.c -= 1
+
+    for layer in self.clus_layers:
+        plotter.setLayer(layer, display= False)
+
+    plotter.toggleDisplay(layer=self.clus_layers[self.c%len(self.clus_layers)]) #figure='Master',
+
+    if event.key == 'm':
+        for layer in self.clus_layers:
+            plotter.toggleDisplay(layer, figure='Master')
+
+    if event.key == 'h':
+        plotter.toggleDisplay(layer='orig_data', figure='Master')
+
+    if event.key == 'up' or (event.key == 'down' and self.d is not 2):
+        if event.key == 'up':
+            self.d += 1
+        elif event.key == 'down':
+            self.d -= 1
+
+    print("Attempting to display", self.d,"-dimensional data...")
+
+    for i in range(len(self.clus_layers)):
+        self.data_dict = compute(self.data[i], self.d, self.clus_layers[i], self.clus_styles[i], self.proj_vecsLO, self.proj_vecsHI)
+
+    self.highlight_eigens()
+    gui.current_domain_handler.assign_criterion_func(self.get_projection_distance)
+
+    plotter.show(rebuild=False)
+```
 
 The end result is a system that lets the user move “horizontally” through different clusters of data and “vertically” through candidate dimensionalities for the reduced data. We can view the variance subplot or printed reports of variance captured to find our low-dimensional sweet-spot, all while referring to the “BEFORE” and “AFTER” images as sanity checks.
 
@@ -258,19 +307,48 @@ The end result is a system that lets the user move “horizontally” through di
 
 As much as I hope you enjoyed this meditation on discs and hyperspheres, it is unlikely that you installed Fovea to process reams of conveniently-gaussian, made-up data. For that matter, it is unlikely you’ll be satisfied exploring whatever data you do have with PCA alone. So I’ll close out with a few comments about the overall design of the PCA visualization module and some simple ways you might repurpose it to meet your needs.
 
-This user example is divided into two files: pca_disc and pca_tester. pca_tester is the end where most of the user’s interaction with the code is meant to occur. It includes the disc and hyphersphere functions already discussed, but both should serve as a template for how to load real data into the pca_disc’s control system and library of dimensionality reduction tools. For instance, instead of generating data with generate_ball and the rotation functions, X could be created from a delimited .txt file with numpy.loadtxt(). Say you’ve used a classifier to group some set of feature-vectors into different clusters. Just as we displayed three disc rotations in three different colors, so too could you explore clouds of “Iris Setosa”, “Iris Vesicolour” and “Iris Virginica” instances in red, green and blue.
+This user example is divided into two files: pca_disc and pca_tester. pca_tester is the end where most of the user’s interaction with the code is meant to occur. It includes the disc and hyphersphere functions already discussed, but both should serve as a template for how to load real data into the pca_disc’s control system and library of dimensionality reduction tools. For instance, instead of generating data with generate_ball and the rotation functions, X could be created from a delimited .txt file with _numpy.loadtxt()_. Say you’ve used a classifier to group some set of feature-vectors into different clusters. Just as we displayed three disc rotations in three different colors, so too could you explore clouds of “Iris Setosa”, “Iris Vesicolour” and “Iris Virginica” instances in red, green and blue.
 
-The three-subplot configuration is also natural to other machine learning paradigms besides PCA. All dimensionality reductions involve three things: a source (high-dimensional) data set, a reduced (lower-dimensional) data set, and some criterion that needs to be optimized in order to generate the reduced data from the source. In PCA, this criterion is variance. But there’s no reason why you might not reserve the third subplot for Kullback-Leibler divergence while using t-SNE, or mean geodesic distances between points in Isomap. Swapping out PCA for another algorithm will take a bit of digging in the “backend” functions of pca_disc, but only these few lines of code in compute() assume that you’re interested in using PCA at all:
+The three-subplot configuration is also natural to other machine learning paradigms besides PCA. All dimensionality reductions involve three things: a source (high-dimensional) data set, a reduced (lower-dimensional) data set, and some criterion that needs to be optimized in order to generate the reduced data from the source. In PCA, this criterion is variance. But there’s no reason why you might not reserve the third subplot for Kullback-Leibler divergence while using t-SNE, or mean geodesic distances between points in Isomap. Swapping out PCA for another algorithm will take a bit of digging in the “backend” functions of pca_disc, but only these few lines of code in _compute()_ assume that you’re interested in using PCA at all:
 
-Code example
+```python
+p = da.doPCA(X, len(X[0]), len(X[0])) #Creates a pcaNode object.
 
-Finally, maybe your data aren’t already clustered, so there’s nothing to toggle between with the left or right arrow keys. Or maybe you already have your heart set on a specific dimensionality, so paging up and down is no good to you. Fortunately, the keypress() function in pca_disc’s ControlSys can be easily modified with a conditional block to patch in whatever key commands do interest you. For example, if you’re curious about how your high-dimensional data might look from many, many different angles, you might modify keypress() to rotate your “BEFORE” projection vectors with presses of the left and right arrow keys and “AFTER” projection vectors by pressing up and down. Instead of having a tool for probing different candidate dimensionalities during a dimensionality reduction, you would then have a GUI in the vein of Cowley et. al’s MATLAB package, DataHigh, which lets users explore how high-dimensional data with 2D projections once the reduction is over.
+pcMat = p.get_projmatrix()
 
-Code example
+plotter.addData([range(1, len(p.d)+1), p.d/sum(p.d)], layer=layer, style=style+"-o", subplot= '13')
 
-Myriad other methods could be added to ControlSys to assist in analyses of the core objects captured in the class fields. For instance, I’m now working on integrating some of the tools from domain2D into the PCA user example. A function for growing a bubble around “AFTER” points that needed to be projected an especially long distance during PCA might look a little like this:
+Y = p._execute(X, new_dim)
+```
 
-Code example
+Finally, maybe your data aren’t already clustered, so there’s nothing to toggle between with the left or right arrow keys. Or maybe you already have your heart set on a specific dimensionality, so paging up and down is no good to you. Fortunately, the _keypress()_ function in pca_disc’s _ControlSys_ can be easily modified with a conditional block to patch in whatever key commands do interest you. For example, if you’re curious about how your high-dimensional data might look from many, many different angles, you might modify _keypress()_ to rotate your “BEFORE” projection vectors with presses of the left and right arrow keys and “AFTER” projection vectors by pressing up and down. Instead of having a tool for probing different candidate dimensionalities during a dimensionality reduction, you would then have a GUI in the vein of DataHigh, a MATLAB package which lets users explore high-dimensional data with continuous, 2D projections once the reduction is over.
+
+Myriad other methods could be added to _ControlSys_ to assist in analyses of the core objects captured in the class fields. For instance, I’m now working on integrating some of the tools from domain2D into the PCA user example. A function for growing a bubble around “AFTER” points that needed to be projected an especially long distance during PCA might look a little like this:
+
+```python
+def get_projection_distance(self, pt_array):
+    """Domain criterion function for determining how far lower dimensional points
+    were projected"""
+
+    nearest_pt = []
+    index = []
+
+    #Find closest projected point.
+    dist = 10000000
+    for i, row in enumerate(self.data_dict['Y_projected']):
+        if numpy.linalg.norm(pt_array - row) < dist:
+            dist = numpy.linalg.norm(pt_array - row)
+            nearest_pt = row
+            index = i
+
+    #Calculate distance between projected point and loD point.
+    orig_pt = self.data_dict['Y'][i]
+    proj_pt = numpy.append(nearest_pt, np.zeros(len(orig_pt)-len(nearest_pt)))
+    if numpy.linalg.norm(orig_pt - proj_pt) > self.proj_thresh:
+        return -1
+    else:
+        return 1
+```
 
 Even if you don’t care to manipulate your GUIs with fancy callbacks and widgets, the ControlSys class is a great place to define scripting methods that let you interact with your applications’ important fields in real-time.
 
@@ -278,5 +356,8 @@ Even if you don’t care to manipulate your GUIs with fancy callbacks and widget
 
 Hopefully this walkthrough has given you a more visual understanding of PCA, but a big takeaway is that this framework is general-purpose and applicable to many data science tasks. Layers can be used to group related data and meta-data and make this information available in a number of formats. Setting up GUIs and callbacks is made easy, but advanced users retain the freedom to interact with their data through scripts and command line inputs. Fovea is an interactive, graphical toolkit, not simply a GUI, which gives would-be dimensionality reducers a view inside whatever black box with which they work.
 
-References
+##References
+[Remarkable tutorial on PCA](https://www.cs.princeton.edu/picasso/mats/PCA-Tutorial-Intuition_jp.pdf)  
+[DataHigh MATLAB package](http://users.ece.cmu.edu/~byronyu/software/DataHigh/datahigh.html)
+[Interactive Applications Using Matplotlib](https://www.packtpub.com/application-development/interactive-applications-using-matplotlib)
 
