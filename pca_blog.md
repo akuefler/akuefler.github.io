@@ -1,6 +1,6 @@
 ###Introduction
 
-If you’ve worked with data, you’ve probably heard of principal component analysis. PCA is one of the most widely used techniques for pre-processing high dimensional data, but for the mathematically illiterate, it can be something of a black box. This tutorial won’t show you the algebra going on inside (for that, I’ve provided a few helpful references), but it will build up some geometric intuitions about what PCA is doing and demonstrate how Fovea can be used to gain such insights.
+If you’ve worked with data, you’ve probably heard of principal component analysis. PCA is one of the most widely used techniques for pre-processing high dimensional data, but for the mathematically illiterate, it can be something of a black box. This tutorial won’t show you the algebra going on inside ([for that, I highly recommend this tutorial by Jon Shlens](https://www.cs.princeton.edu/picasso/mats/PCA-Tutorial-Intuition_jp.pdf)), but it will build up some geometric intuitions about what PCA is doing and demonstrate how Fovea can be used to gain such insights.
 
 Let’s start off in everyone’s three favorite dimensions (x, y, and z) before working our way up.  Consider the following dataset:
 
@@ -77,33 +77,31 @@ rot_styles = ['r', 'g', 'b']
 And the layers can be added to the plotter like so:
 
 ```python
-#Setup all layers
 plotter.addLayer('orig_data')
-plotter.addLayer('meta_data', kind='text')
 
 for rot in rot_layers:
     plotter.addLayer(clus)
 ```
 
-I’ve also included a fourth layer, “orig_data”, to house the original data-disc prior to any rotations. But before we can start populating rot1, rot2, and rot3 with data, we need a figure window and some axes over which our layers will be displayed. pca_disc provides a convenient function, _setupDisplay()_, which accepts a couple lists of strings (i.e., rot_layers and rot_styles) and arranges a figure with three subplots:
+I’ve also included a fourth layer, “orig_data”, to house the original data-disc prior to any rotations. But before we can start populating rot1, rot2, and rot3 with data, we need a figure window and some axes over which our layers will be displayed. _pca/_disc_ provides a convenient function, _setupDisplay()_, which accepts a couple lists of strings (i.e., rot_layers and rot_styles) and arranges a figure with three subplots:
 
 ```python
 plotter.arrangeFig([1,3], {
     '11':
         {'name': 'BEFORE',
         'scale': [(-10,10),(-10,10)],
-        'layers': clus_layers+['orig_data'],  
+        'layers': rot_layers+['orig_data'],  
         'axes_vars': ['x', 'y', 'z'],
         'projection':'3d'},
     '12':
         {'name': 'AFTER',
         'scale': [(-20,20),(-20,20)],
-        'layers': clus_layers,  
+        'layers': rot_layers,  
         'axes_vars': ['a', 'b']},
     '13':
         {'name': 'Variance by Components',
         'scale': [(0.5,10),(0,1)],
-        'layers': clus_layers,  
+        'layers': rot_layers,  
         'axes_vars': ['x', 'y']},
     })
 
@@ -115,7 +113,7 @@ The first subplot, (entitled "BEFORE") will be home to the original 3D disc data
 
 As we move to more complicated data sets, it will also be important to assess how much the data are spread along each axis (the variance). Knowing the variance captured by each PC will later let us decide if that dimension is worth keeping around. So we will also set aside a third subplot, ‘Variance by Component’ where this information will eventually be stored. Notice also that every subplot will contain a bit of data from every layer, so the ‘layers’ parameter for each one is simply the list “rot_layers” (with orig_data appended on for the first subplot).
 
-Looping through our list of layers, we can now perform PCA on each rotated dataset using pca/_disc’s _compute()_ function. _compute()_ is makes use of _doPCA()_ – an aptly named function for doing PCA – included in PyDSTool’s data analysis toolbox (imported as ‘da’). You may also wish to create a pcaNode object directly with the python MDP package (which da imports). MDP includes a method for retrieving the data’s projection matrix, whose columns are the principal components we’re after. Another handy method defined for pcaNodes is simply named “d()”, which returns the list of eigenvalues corresponding to the principal components (which we can use to account for how much variance each new dimension explains).
+Looping through our list of layers, we can now perform PCA on each rotated dataset using _pca/_disc_’s _compute()_ function. _compute()_ makes use of _doPCA()_ – an aptly named function for doing PCA – included in PyDSTool’s data analysis toolbox (imported as ‘da’). You may also wish to create a pcaNode object directly with the python MDP package (which da imports). MDP includes a method for retrieving the data’s projection matrix, whose columns are the principal components we’re after. Another handy method defined for pcaNodes is simply named “_d()_”, which returns the list of eigenvalues corresponding to the principal components (which we can use to account for how much variance each new dimension explains).
 
 ```python
 #Create a pcaNode object.
@@ -136,11 +134,11 @@ for j in range(1, new_dim):
 Y = p._execute(X, new_dim)
 ```
 
-_compute()_ adds the data (both low and high dimensional), the PC’s, and a plot of variances to their respective layers, and makes use of the optional “subplot” parameter to ensure each group of data ends up on the axes assigned to it.
+_compute()_ then adds the data (both low and high dimensional), the PC’s, and a plot of variances to their respective layers, and makes use of the optional “subplot” parameter to ensure each group of data ends up on the axes assigned to it.
 
 ```python
 #Create plot of high-dimensional data.
-plotter.addData([X[:,0], X[:,1], X[:,2]], layer= layer, style=style+'.', subplot= '11')
+plotter.addData([X[:,0], X[:,1], X[:,2]], layer=layer, style=style+'.', subplot='11')
 
 #Add PC lines to the same subplot as the high-dimensional data.
 for j in range(0, len(pcPts), 2):
@@ -166,7 +164,7 @@ for layer in rot_layers:
 
 ### Exploratory Analysis
 
-At this point, we can explore our data by clicking and rolling the 3D axes and changing the visibility of the various layers using setLayer. But to make things more user-friendly, it is better to set up some callbacks. For now, this function will respond contextually by cycling through the different rotations when the arrow keys are pressed, hiding the original data when ‘h’ is pressed, and displaying all rotations in response to ‘m’. It can be easily connected to our GUI’s instance of masterWin with “mpl_connect”:
+At this point, we can explore our data by clicking and rolling the 3D axes and changing the visibility of the various layers using _setLayer()_. But to make things more user-friendly, it is better to set up some callbacks. For now, this function will respond contextually by cycling through the different rotations when the arrow keys are pressed, hiding the original data when ‘h’ is pressed, and displaying all rotations in response to ‘m’. It can be easily connected to our GUI’s instance of masterWin with “mpl_connect”:
 
 ```python
 c = 0
@@ -198,7 +196,7 @@ gui.masterWin.canvas.mpl_connect('key_press_event', keypress)
 
 After a bit of playing around with our visualization, a few things should become apparent.
 
-First, each rotation’s PC’s line up beautifully with the data, as one would expect from this surrogate dataset. If you rotate the data-disc to be edge-on, you’ll see that data-points and PC’s all fall in a straight line. If we want to fuzzy-up the disc with the noise function provided in pca_disc, we may lose our straight line, but the PC’s will still point across the breadth of the data, as we would hope.
+First, each rotation’s PC’s line up beautifully with the data, as one would expect from this surrogate dataset. If you rotate the data-disc to be edge-on, you’ll see that data-points and PC’s all fall in a straight line. If we want to fuzzy-up the disc with the _noise()_ function provided in _pca/_disc_, we may lose our straight line, but the PC’s will still point across the breadth of the data, as we would hope.
 
 ![disc and PC's](https://github.com/akuefler/akuefler.github.io/blob/master/images/PCA_images/noisedisc_w_axes.png?raw=true)
 ![dic and PC's, lined up](https://github.com/akuefler/akuefler.github.io/blob/master/images/PCA_images/noisedisc_w_axes_edgeon.png?raw=true)
@@ -217,7 +215,7 @@ And third, the “variance by components” plot is very boring. Because we’re
 
 For most real-world datasets, dimensionality reduction involves sacrifice. Every principal component captures a bit of variance and somewhere along the line, the user must make a judgment call about how much of that variance it is okay to throw out if it means getting to weasel into a lower dimension. The subjectivity of this process is why visual diagnostics tools can play such an important role in dimensionality reduction. Good analyses rely on the ability of informaticians to make informed decisions and Fovea is a great informer. By interacting with data, testing different candidate dimensionalities, and observing the associated “variance payoffs”, users can make better choices for a dimensionality reduction.
 
-Consider how our workflow changes as we move into higher dimensions. Imagine you are a psychologist acutely interested in how frequently members of 3 different populations (children, adolescents, and adults) experience 6 different emotions (joy, sorrow, jealousy, malice, fear, and pride) throughout the day. For convenience, we’ll pretend also that each population’s data can be modeled perfectly as a normally-distributed hypersphere in 6D emotion-space. Now instead of having three rotations of a disc shown in three different colors, our dataset will consist of three distinct hyperspheres (created with synthetic_data) representing the emotional diversity of children (red), adolescents (green) and adults (blue):
+Consider how our workflow changes as we move into higher dimensions. Imagine you are a psychologist acutely interested in how frequently members of 3 different populations (children, adolescents, and adults) experience 6 different emotions (joy, sorrow, jealousy, malice, fear, and pride) throughout the day. For convenience, we’ll pretend also that each population’s data can be modeled perfectly as a normally-distributed hypersphere in 6D emotion-space. Now instead of having three rotations of a disc shown in three different colors, our dataset will consist of three distinct hyperspheres (created with _synthetic/_data()_) representing the emotional diversity of children (red), adolescents (green) and adults (blue):
 
 ```python
 #Create and stretch different hypersphere "clusters":
@@ -231,7 +229,7 @@ clus_layers = ['clus1', 'clus2', 'clus3']
 clus_styles = ['r', 'g', 'b']
 ```
 
-Notice that I’ve also tinkered with the number of datapoints making up each hypersphere (the sample size of that population) and applied _pca\_disc_’s stretch, translate and noise function to give each cluster its own character, as we would expect from three different clusters of a real dataset.
+Notice that I’ve also tinkered with the number of datapoints making up each hypersphere (the sample size of that population) and applied _pca\_disc_’s _stretch()_, _translate()_ and _noise()_ function to give each cluster its own character, as we would expect from three different clusters of a real dataset.
 
 Let’s say we suspect our choice of 6 emotions was somewhat arbitrary. Do we really need to give “joy” and “pride” their own axes, or should reports of those feelings all be lumped into a single variable (happiness)? For that matter, don’t “jealousy” and “malice” belong to the same underlying emotion (contempt) as well? PCA is designed to settle questions like these.
 
@@ -248,18 +246,18 @@ However, when dealing with 6D data, there is more leeway to select how many axes
 
 ![The disparity was created by applying _stretch()_ to X1 along 2 different axes](https://github.com/akuefler/akuefler.github.io/blob/master/images/PCA_images/variance_gap.png?raw=true)
 
-If this were real psychological data, we might conclude that we were too hasty to settle on four new dimensions, when what we really needed was just a “positive emotion” axis and a “negative emotion” axis. Then again, even if two vectors explain a big portion, we would still be throwing out a lot of variance if we ignore the other 3 completely. In other words, the process of picking the best dimensionality is non-deterministic, context-dependent and leaves room for trial and error.
+If this were real psychological data, we might conclude that we were too hasty to settle on four new dimensions, when what we really needed was just a “positive emotion” axis and a “negative emotion” axis. Then again, even if two vectors explain a big portion, we would still be throwing out a lot of variance if we ignore the other 3 completely. In other words, the process of picking the best dimensionality is non-deterministic, context-dependent, and leaves room for trial and error.
 
-Wouldn’t it then be nice if we could manually select the number of PCs we want to project our data onto and explore how our choice affects the “AFTER” image? By including ‘up’ and ‘down’ arrow clicks in our keypress function we can do just that. Each time we press the ‘up’ key, another PC is added to the set of axes onto which the “BEFORE” data are projected (thus changing the appearance of the “AFTER” plot). Each time we press ‘down’, a PC is removed. And if the current number of selected PC’s exceeds two, the code swoops in with our arbitrary, orthonormal, projection vectors to display the data in the second subplot.
+Wouldn’t it then be nice if we could manually select the number of PCs we want to project our data onto and explore how our choice affects the “AFTER” image? By including "up" and "down" arrow clicks in our _keypress()_ function we can do just that. Each time we press the "up" key, another PC is added to the set of axes onto which the “BEFORE” data are projected (thus changing the appearance of the “AFTER” plot). Each time we press "down", a PC is removed. And if the current number of selected PC’s exceeds two, the code swoops in with our arbitrary, orthonormal, projection vectors to display the data in the second subplot.
 
 However, as we flit around dimensions, generating different “AFTER” data, and projecting what we find onto our random QR-vectors, we end up with a lot of different variables to keep track of. For instance, even if our projection vectors for displaying 4D data are chosen arbitrary, we still want them to be the same vectors if we hop over to 5D-land for a bit, then come back. Otherwise, viewing the different plots produced by toggling through different dimensions is about as informative as randomly generating the data each time.
 
-Fortunately, Fovea’s object-oriented design makes it easy to add new classes that store and reuse attributes during interactive plotting sessions. Reworking a bit of code from Benjamin Root’s _Interactive Applications Using Matplotlib_, we can come up with a control system class, _ControlSys_, whose fields include:
+Fortunately, Fovea’s object-oriented design makes it easy to add new classes that store and reuse attributes during interactive plotting sessions. Reworking a bit of code from Benjamin Root’s [Interactive Applications Using Matplotlib](https://www.packtpub.com/application-development/interactive-applications-using-matplotlib), we can come up with a control system class, _ControlSys_, whose fields include:
 
-*d* (the number of PC’s we wish to start with),
-*c* (a counter for keeping track of which hypersphere is on display),
-*proj_vecsLO* (Two orthonormal vectors for projecting post-PCA data),
-*proj_vecsHI* (Three orthonormal vectors for projecting pre-PCA data)
+**d** (the number of PC’s we wish to start with),  
+**c** (a counter for keeping track of which hypersphere is on display),  
+**proj_vecsLO** (Two orthonormal vectors for projecting post-PCA data),  
+**proj_vecsHI** (Three orthonormal vectors for projecting pre-PCA data)
 
 This class also includes a modified version of our function, _keypress()_, which now cycles between layers/clusters (left and right), re-computes PCA in different dimensions (up and down), and changes visibilities (‘m’ and ‘h’).
 
@@ -302,15 +300,19 @@ def keypress(self, event):
     plotter.show(rebuild=False)
 ```
 
+Note also the print statement and _highlight/_eigens()_ function, called when the up or down keys are pressed. Each cues the user to the effects their changes of dimensionality has. In the case of the print statement, this cue is text. In the case of _highlight/_eigens()_, vertical bars are drawn through each component in the "Variance by Components" currently being viewed. Another more subtle indication of the current dimensionality is the number of colored axes visible in the "BEFORE" plot, which will always be the same as the number of vertical bars.
+
+![Four components are currently in use](https://github.com/akuefler/akuefler.github.io/blob/master/images/PCA_images/highlighted_eigens.png?raw=true)
+
 The end result is a system that lets the user move “horizontally” through different clusters of data and “vertically” through candidate dimensionalities for the reduced data. We can view the variance subplot or printed reports of variance captured to find our low-dimensional sweet-spot, all while referring to the “BEFORE” and “AFTER” images as sanity checks.
 
-###Adapting this Example to your Application
+###Adapting This Example To Your Application
 
 As much as I hope you enjoyed this meditation on discs and hyperspheres, it is unlikely that you installed Fovea to process reams of conveniently-gaussian, made-up data. For that matter, it is unlikely you’ll be satisfied exploring whatever data you do have with PCA alone. So I’ll close out with a few comments about the overall design of the PCA visualization module and some simple ways you might repurpose it to meet your needs.
 
-This user example is divided into two files: pca_disc and pca_tester. pca_tester is the end where most of the user’s interaction with the code is meant to occur. It includes the disc and hyphersphere functions already discussed, but both should serve as a template for how to load real data into the pca_disc’s control system and library of dimensionality reduction tools. For instance, instead of generating data with generate_ball and the rotation functions, X could be created from a delimited .txt file with _numpy.loadtxt()_. Say you’ve used a classifier to group some set of feature-vectors into different clusters. Just as we displayed three disc rotations in three different colors, so too could you explore clouds of “Iris Setosa”, “Iris Vesicolour” and “Iris Virginica” instances in red, green and blue.
+This user example is divided into two files: _pca/_disc_ and _pca/_tester_. _pca/_tester_ is the end where most of the user’s interaction with the code is meant to occur. It includes the disc and hyphersphere functions already discussed, but both should serve as a template for how to load real data into the _pca/_disc_’s control system and library of dimensionality reduction tools. For instance, instead of generating data with _generate/_ball()_ and the rotation functions, X could be created from a delimited .txt file with _numpy.loadtxt()_. Say you’ve used a classifier to group some set of feature-vectors into different clusters. Just as we displayed three disc rotations in three different colors, so too could you explore clouds of “Iris Setosa”, “Iris Vesicolour” and “Iris Virginica” instances in red, green and blue.
 
-The three-subplot configuration is also natural to other machine learning paradigms besides PCA. All dimensionality reductions involve three things: a source (high-dimensional) data set, a reduced (lower-dimensional) data set, and some criterion that needs to be optimized in order to generate the reduced data from the source. In PCA, this criterion is variance. But there’s no reason why you might not reserve the third subplot for Kullback-Leibler divergence while using t-SNE, or mean geodesic distances between points in Isomap. Swapping out PCA for another algorithm will take a bit of digging in the “backend” functions of pca_disc, but only these few lines of code in _compute()_ assume that you’re interested in using PCA at all:
+The three-subplot configuration is also natural to other machine learning paradigms besides PCA. All dimensionality reductions involve three things: a source (high-dimensional) data set, a reduced (lower-dimensional) data set, and some criterion that needs to be optimized in order to generate the reduced data from the source. In PCA, this criterion is variance. But there’s no reason why you might not reserve the third subplot for Kullback-Leibler divergence while using t-SNE, or mean geodesic distances between points in Isomap. Swapping out PCA for another algorithm will take a bit of digging in the “backend” functions of _pca/_disc_, but only these few lines of code in _compute()_ assume that you’re interested in using PCA at all:
 
 ```python
 p = da.doPCA(X, len(X[0]), len(X[0])) #Creates a pcaNode object.
@@ -322,14 +324,16 @@ plotter.addData([range(1, len(p.d)+1), p.d/sum(p.d)], layer=layer, style=style+"
 Y = p._execute(X, new_dim)
 ```
 
-Finally, maybe your data aren’t already clustered, so there’s nothing to toggle between with the left or right arrow keys. Or maybe you already have your heart set on a specific dimensionality, so paging up and down is no good to you. Fortunately, the _keypress()_ function in pca_disc’s _ControlSys_ can be easily modified with a conditional block to patch in whatever key commands do interest you. For example, if you’re curious about how your high-dimensional data might look from many, many different angles, you might modify _keypress()_ to rotate your “BEFORE” projection vectors with presses of the left and right arrow keys and “AFTER” projection vectors by pressing up and down. Instead of having a tool for probing different candidate dimensionalities during a dimensionality reduction, you would then have a GUI in the vein of DataHigh, a MATLAB package which lets users explore high-dimensional data with continuous, 2D projections once the reduction is over.
+Finally, maybe your data aren’t already clustered, so there’s nothing to toggle between with the left or right arrow keys. Or maybe you already have your heart set on a specific dimensionality, so paging up and down is no good to you. Fortunately, the _keypress()_ function in _pca/_disc_’s _ControlSys_ can be easily modified with a conditional block to patch in whatever key commands do interest you. For example, if you’re curious about how your high-dimensional data might look from many, many different angles, you might modify _keypress()_ to rotate your “BEFORE” projection vectors with presses of the left and right arrow keys and “AFTER” projection vectors by pressing up and down. Instead of having a tool for probing different candidate dimensionalities during a dimensionality reduction, you would then have a GUI in the vein of [DataHigh](http://users.ece.cmu.edu/~byronyu/software/DataHigh/datahigh.html), a MATLAB package which lets users explore high-dimensional data with continuous, 2D projections once the reduction is over.
 
 Myriad other methods could be added to _ControlSys_ to assist in analyses of the core objects captured in the class fields. For instance, I’m now working on integrating some of the tools from domain2D into the PCA user example. A function for growing a bubble around “AFTER” points that needed to be projected an especially long distance during PCA might look a little like this:
 
 ```python
 def get_projection_distance(self, pt_array):
-    """Domain criterion function for determining how far lower dimensional points
-    were projected"""
+    """  
+    Domain criterion function for determining how far lower dimensional points
+    were projected  
+    """
 
     nearest_pt = []
     index = []
@@ -343,7 +347,7 @@ def get_projection_distance(self, pt_array):
             index = i
 
     #Calculate distance between projected point and loD point.
-    orig_pt = self.data_dict['Y'][i]
+    orig_pt = self.data_dict['Y'][index]
     proj_pt = numpy.append(nearest_pt, np.zeros(len(orig_pt)-len(nearest_pt)))
     if numpy.linalg.norm(orig_pt - proj_pt) > self.proj_thresh:
         return -1
@@ -351,11 +355,11 @@ def get_projection_distance(self, pt_array):
         return 1
 ```
 
-Even if you don’t care to manipulate your GUIs with fancy callbacks and widgets, the ControlSys class is a great place to define scripting methods that let you interact with your applications’ important fields in real-time.
+Even if you don’t care to manipulate your GUIs with fancy callbacks and widgets, the _ControlSys_ class is a great place to define scripting methods that let you interact with your applications’ important fields in real-time.
 
 ###Conclusion
 
-Hopefully this walkthrough has given you a more visual understanding of PCA, but a big takeaway is that this framework is general-purpose and applicable to many data science tasks. Layers can be used to group related data and meta-data and make this information available in a number of formats. Setting up GUIs and callbacks is made easy, but advanced users retain the freedom to interact with their data through scripts and command line inputs. Fovea is an interactive, graphical toolkit, not simply a GUI, which gives would-be dimensionality reducers a view inside whatever black box with which they work.
+Hopefully this walkthrough has given you a more visual understanding of PCA, but the moral of the story is that this framework is general-purpose and applicable to many data science tasks. Layers can be used to group related data and meta-data and make this information available in a number of formats. Setting up GUIs and callbacks is made easy, but advanced users retain the freedom to interact with their data through scripts and command line inputs. Fovea is an interactive, graphical toolkit, not simply a GUI. It gives would-be dimensionality reducers a view inside whatever black boxes interest them.
 
 ##Links
 [Remarkable tutorial on PCA](https://www.cs.princeton.edu/picasso/mats/PCA-Tutorial-Intuition_jp.pdf)  
