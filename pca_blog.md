@@ -1,4 +1,4 @@
-##Introduction
+###Introduction
 
 If you’ve worked with data, you’ve probably heard of principal component analysis. PCA is one of the most widely used techniques for pre-processing high dimensional data, but for the mathematically illiterate, it can be something of a black box. This tutorial won’t show you the algebra going on inside (for that, I’ve provided a few helpful references), but it will build up some geometric intuitions about what PCA is doing and demonstrate how Fovea can be used to gain such insights.
 
@@ -65,7 +65,7 @@ PCA’s job is to throw out the x, y and z axes and come up with a new set of ax
 
 In _pca\_disc_, it is apparent that the two measly a and b axes can capture the same amount of “interesting stuff” as all three, x, y, and z axes. To convince ourselves, we’ll need some way to rapidly explore how our data look embedded in high-dimensional space and how they look after projection onto axes a and b. Together, Fovea layers and matplotlib’s subplots provide the needed utility.
 
-##Setting Up Fovea
+###Setting Up Fovea
 
 Our goal is to set up some nice images showing the “before and after” of a dimensionality reduction as subplots in a figure window. But first we need to decide what kinds of information we want populating our subplots. For the purposes of this tutorial, the layers will correspond to different rotations of our disc and contain four different, but associated, groups of data (before-PCA data, after-PCA data, variance captured by PCA, and the PC’s themselves). Out in the wild, the user may want to reserve each layer for different clusters of a single dataset or different datasets entirely (the possibilities are endless). We can set aside some names and appropriate colors for our layers in a couple lists:
 
@@ -164,7 +164,7 @@ for layer in rot_layers:
     plotter.setLayer(layer, figure='Master', display=False)
 ```
 
-## Exploratory Analysis
+### Exploratory Analysis
 
 At this point, we can explore our data by clicking and rolling the 3D axes and changing the visibility of the various layers using setLayer. But to make things more user-friendly, it is better to set up some callbacks. For now, this function will respond contextually by cycling through the different rotations when the arrow keys are pressed, hiding the original data when ‘h’ is pressed, and displaying all rotations in response to ‘m’. It can be easily connected to our GUI’s instance of masterWin with “mpl_connect”:
 
@@ -213,7 +213,7 @@ And third, the “variance by components” plot is very boring. Because we’re
 
 ![Notice that the angle of the variance line-plot corresponds to amount same-colored disc is skewed](https://github.com/akuefler/akuefler.github.io/blob/master/images/PCA_images/stretches_and_variances.png?raw=true)
 
-##High-Dimensional Data
+###High-Dimensional Data
 
 For most real-world datasets, dimensionality reduction involves sacrifice. Every principal component captures a bit of variance and somewhere along the line, the user must make a judgment call about how much of that variance it is okay to throw out if it means getting to weasel into a lower dimension. The subjectivity of this process is why visual diagnostics tools can play such an important role in dimensionality reduction. Good analyses rely on the ability of informaticians to make informed decisions and Fovea is a great informer. By interacting with data, testing different candidate dimensionalities, and observing the associated “variance payoffs”, users can make better choices for a dimensionality reduction.
 
@@ -293,7 +293,8 @@ def keypress(self, event):
     print("Attempting to display", self.d,"-dimensional data...")
 
     for i in range(len(self.clus_layers)):
-        self.data_dict = compute(self.data[i], self.d, self.clus_layers[i], self.clus_styles[i], self.proj_vecsLO, self.proj_vecsHI)
+        self.data_dict = compute(self.data[i], self.d, self.clus_layers[i],  
+            self.clus_styles[i], self.proj_vecsLO, self.proj_vecsHI)
 
     self.highlight_eigens()
     gui.current_domain_handler.assign_criterion_func(self.get_projection_distance)
@@ -303,7 +304,7 @@ def keypress(self, event):
 
 The end result is a system that lets the user move “horizontally” through different clusters of data and “vertically” through candidate dimensionalities for the reduced data. We can view the variance subplot or printed reports of variance captured to find our low-dimensional sweet-spot, all while referring to the “BEFORE” and “AFTER” images as sanity checks.
 
-##Adapting this Example to your Application
+###Adapting this Example to your Application
 
 As much as I hope you enjoyed this meditation on discs and hyperspheres, it is unlikely that you installed Fovea to process reams of conveniently-gaussian, made-up data. For that matter, it is unlikely you’ll be satisfied exploring whatever data you do have with PCA alone. So I’ll close out with a few comments about the overall design of the PCA visualization module and some simple ways you might repurpose it to meet your needs.
 
@@ -352,12 +353,12 @@ def get_projection_distance(self, pt_array):
 
 Even if you don’t care to manipulate your GUIs with fancy callbacks and widgets, the ControlSys class is a great place to define scripting methods that let you interact with your applications’ important fields in real-time.
 
-##Conclusion
+###Conclusion
 
 Hopefully this walkthrough has given you a more visual understanding of PCA, but a big takeaway is that this framework is general-purpose and applicable to many data science tasks. Layers can be used to group related data and meta-data and make this information available in a number of formats. Setting up GUIs and callbacks is made easy, but advanced users retain the freedom to interact with their data through scripts and command line inputs. Fovea is an interactive, graphical toolkit, not simply a GUI, which gives would-be dimensionality reducers a view inside whatever black box with which they work.
 
-##References
+##Links
 [Remarkable tutorial on PCA](https://www.cs.princeton.edu/picasso/mats/PCA-Tutorial-Intuition_jp.pdf)  
-[DataHigh MATLAB package](http://users.ece.cmu.edu/~byronyu/software/DataHigh/datahigh.html)
+[DataHigh MATLAB package](http://users.ece.cmu.edu/~byronyu/software/DataHigh/datahigh.html)  
 [Interactive Applications Using Matplotlib](https://www.packtpub.com/application-development/interactive-applications-using-matplotlib)
 
