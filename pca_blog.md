@@ -1,6 +1,6 @@
 ###Introduction
 
-If you’ve worked with data, you’ve probably heard of principal component analysis. PCA is one of the most widely used techniques for pre-processing high dimensional data, but for the mathematically illiterate, it can be something of a black box. This tutorial won’t show you the algebra going on inside ([for that, I highly recommend this tutorial by Jon Shlens](https://www.cs.princeton.edu/picasso/mats/PCA-Tutorial-Intuition_jp.pdf)), but it will build up some geometric intuitions about what PCA is doing and demonstrate how Fovea can be used to gain such insights.
+If you’ve worked with data, you’ve probably heard of principal component analysis. PCA is one of the most widely used techniques for pre-processing high dimensional data, but for the mathematically illiterate, it can be something of a black box. This tutorial won’t show you the algebra going on inside (for that, I highly recommend this [tutorial by Jon Shlens](https://www.cs.princeton.edu/picasso/mats/PCA-Tutorial-Intuition_jp.pdf)), but it will build up some geometric intuitions about what PCA is doing and demonstrate how Fovea can be used to gain such insights.
 
 Let’s start off in everyone’s three favorite dimensions (x, y, and z) before working our way up.  Consider the following dataset:
 
