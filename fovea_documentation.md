@@ -4,7 +4,7 @@
 
 Dynamical systems play an important role in many scientific fields, but models of such systems can feature many parameters and variables that are confusing to first time users. Fovea is a python package for assisting researchers in the process of building intuition about dynamical systems implemented in algorithms. The package consists of five files.
 
-#####1. graphics.py
+###1. graphics.py
 Fovea graphics provides a set of tools allowing the user to visualize the action of dynamical systems as they evolve over time, or as their parameters change. It adds a new level abstraction to the graphical inheritance structure used by Matplotlib.
 
 ![matplotlib graphical object hierarchy](https://raw.githubusercontent.com/akuefler/akuefler.github.io/master/images/mpl_hierarchy.png)
@@ -49,24 +49,39 @@ Note also that Plotters can be initialized with a diagnostic manager object, whi
 
 _diagnosticGUI_ takes an instance of plotter2D in its constructor and provides user-interactivity with the graphics created by that instance. It creates appropriate widgets that can be used for exploring models (such as a slider for incrementing and decrementing time steps) and provides button callbacks for clicking on the axes. For example, the method getDynamicPoint lets the user click a subplot and store the point clicked on a clipboard for later access.
 
-Together, _diagnosticGUI_ and _plotter2D_ provide the front and back ends of Fovea. The GUI class is intended as the user's point of entry to the system. It provides _addDataPoints()_ to enter pointSet data that may later be visualized with the plotter and comes built in with a number "basic" widgets (the save, capturePoint, refresh and back buttons), which can be hidden by setting the optional parameter "basic_widgets" as False when the display is initialized with _buildPlotter2D()_. The suite of basic widgets can also be extended with the _addWidget()_ method, which saves the user the trouble of creating widget objects with matplotlib and adding them to GUI figures directly.
+####GUI vs. Plotter
+
+Together, _diagnosticGUI_ and _plotter2D_ provide the front and back ends of Fovea. The GUI class is intended as the user's point of entry to the system. It provides _addDataPoints()_ to enter pointSet data that may later be visualized with the plotter and comes built in with a number of "basic" widgets (the save, capturePoint, refresh and back buttons), which can be hidden by setting the optional parameter "basic_widgets" as False when the display is initialized with _buildPlotter2D()_. The suite of basic widgets can also be extended with the _addWidget()_ method, which saves the user the trouble of creating widget objects with matplotlib and adding them to GUI figures directly. For instance, a slider object (ranging from -10 to 10 and initialized at 0) can be added to the figure and connected to the user's callback (self.slideCallback):
+
+```python
+gui.addWidget(Slider, callback=self.slideCallback, axlims = (0.1, 0.055, 0.65, 0.03),
+    label='my_slider', valmin= -10, valmax= 10,
+    valinit= 0, color='b', dragging=False, valfmt='%2.3f')
+```
 
 The overall design of _diagnosticGUI_ emphasizes features general to any application, while giving the user the flexibility to patch in their own extensions. Another example is the _key\_on()_ method, which defines hotkeys and connects each to a callback (such as _mouse\_event\_snap()_ in _diagnosticGUI_ and _RectangleSelector_ in matplotlib). Some of these key commands tie into functions defined in the user's application. _diagnosticGUI.assign_user_func()_ takes a callable, such as a function created by the user, and stores this as an attribute of the GUI. This callable (user_func) will then be used by _mouse\_event\_user\_function()_ connected in _key\_on()_.
 
-Although the actions of _plotter2D_ are largely intended to take place within the context of a GUI object, in advanced applications it may be necessary to set properties and give commands to the plotter directly. Currently, *layers* are implemented as a struct (layer_struct) whose fields are the layer's attributes (e.g. data, style, axes_obj) in an instance of _plotter2D_. Any of these properties can be set with _plotter2D.setLayer()_, which along with _addLayer()_, provide the user (at the command line or in user-functions) direct control over how data are displayed and managed in a GUI's subplots.'
+Although the actions of _plotter2D_ are largely intended to take place within the context of a GUI object, in advanced applications it may be necessary to set properties and give commands to the plotter directly. Currently, **layers** are implemented as a struct (layer_struct) whose fields are the layer's attributes (e.g. data, style, axes_obj) in an instance of _plotter2D_. Any of these properties can be set with _plotter2D.setLayer()_, which along with _addLayer()_, provide the user (at the command line or in user-functions) direct control over how data are displayed and managed in a GUI's subplots.
 
-#####2. diagnostics.py
-#####3. calc_context.py
+###2. domain2D.py
+In some applications, it may be necessary to monitor how the output of a function changes across the xy-plane. For instance, if a trajectory is being plotted through a vector field, the ability to highlight regions of the field where moving objects might get stuck could be invaluable.  _domain2D_ provides utilities for creating such "domains of interest" based on spatial variables in the xy-plane. It consists of two classes, _polygon\_domain_ and _GUI\_domain\_handler_, in addition to two functions, _edge\_lengths_ and _merge\_to\_polygon_.
 
-#####4. common.py
+_polygon\_domain_ is the fundamental shape object used in _domain2D_. An instance of _polygon\_domain_ includes a seed point c and a point p1, where the distance between c and p1 defines the initial radius of the polygon. The domain criterion function (saved as the attribute _condition\_func_) is a user provided, two variable function mapping x and y to a scalar value. The method _grow()_ uses these three attributes to iteratively expand the boundaries of the polygon, allowing it to swallow up nearby space where points within that space satisfy a certain condition. This condition is that the domain criterion function must output a scalar with the same sign given new points as it would given the c, the seed point. Note that the warning "f(p1) has different sign to f(c)" will occur if a p1 is chosen that fails to satisfy this condition. This behavior remains the same for all _polygon\_domain_s, but by providing different domain criterion functions, the user can tailor domains to meet their needs.
 
-#####5. domain2D.py
+_GUI\_domain_handler_ provides the needed interface between Fovea's _domain2D_ and _graphics_ utilities. A domain handler object allows users to assign a domain criterion function created in their own application to the _polygon\_domain_ (using _assign\_criterion\_func()_.
+
+
 class polygon_domain(object):  
 
 grow_step(self, verbose=False):
 Iterates over all of the exterior coordinates of of the domain polygon. Each time, increments the values of the points by a certain step size to create a new point. If the domain criterion function, given this new point, returns a value with the same sign as it would return, given the seed point, the new point is stored. Once all the original polygon points have been compared using boolfunc, a new polygon is made out of all the satisfying points.
 
 self.boolfunc (implicit method). Performs a comparison to see if the output of the domain criterion function for a given input (a point) shares the same sign as the output at the seed point.
+
+###2. diagnostics.py
+###3. calc_context.py
+
+###4. common.py
 
 ##COMMANDS
 
