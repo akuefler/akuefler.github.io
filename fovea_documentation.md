@@ -7,7 +7,7 @@ Dynamical systems play an important role in many scientific fields, but models o
 ###1. graphics.py
 Fovea graphics provides a set of tools allowing the user to visualize the action of dynamical systems as they evolve over time, or as their parameters change. It adds a new level abstraction to the graphical inheritance structure used by Matplotlib.
 
-![matplotlib graphical object hierarchy](https://raw.githubusercontent.com/akuefler/akuefler.github.io/master/images/mpl_hierarchy.png)
+![matplotlib graphical object hierarchy](https://github.com/akuefler/akuefler.github.io/blob/master/images/fig_hierarchy2.png?raw=true)
 
 **Layers** are a new data structure that can be associated with the subplots, or axes, of a figure. Whereas axes may contain observed data, the Layers lie over these data like transparent slides and can be used to display an algorithm’s current parameter values or iteration step, hidden variables, or any kind of metadata important to the user. graphics.py includes two main classes:
 
@@ -90,8 +90,6 @@ self.boolfunc (implicit method). Performs a comparison to see if the output of t
 ####MISC NOTES:
 fig_struct is a dictionary produced as the first output of self._resolveFig(figure), it contains the fields: 'domain', 'arrange', 'xlabel', 'window', 'display', 'layers', 'autoscaling', 'title', 'fignum', 'ylabel', 'tdom', 'shape'. These are properties of the master window/ figure itself. It can also be accessed within the plotter2D class with self.figs[figure_name], which is what ._resolveFig does.
 
-    (_So why does resolveFig exist at all?_)
-
 figure, output as the second argument of self._resolveFig(figure), is just a string. The name of the figure fig_struct describes (e.g., 'master')
 
 layer_struct is a dictionary associated with a unique, named layer. It contains the fields: 'scale', 'kind', 'style', 'data', 'dynamic', 'zindex', 'axes_vars', 'trajs', 'display', 'handles'. These are the properties of the layer named in the call to self._resolveLayer(figure, layer). Each layer has its own struct.
@@ -148,6 +146,9 @@ _self.currFig_
 _self.active\_layer\_structs_
 
 ####Methods:
+
+####addText(self, data, figure=None, layer=None, style=None, name=None, display=True, force=False, log=None)
+Does NOT accept a list of text/list of position coords to create text en mass.
 
 ####addData(self, data, figure=None, layer=None, style=None, name=None, display=True, force=False, log=None)
 """
