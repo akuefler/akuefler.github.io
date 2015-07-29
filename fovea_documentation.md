@@ -5,11 +5,47 @@
 Dynamical systems play an important role in many scientific fields, but models of such systems can feature many parameters and variables that are confusing to first time users. Fovea is a python package for assisting researchers in the process of building intuition about dynamical systems implemented in algorithms. The package consists of five files.
 
 ###1. graphics.py
-Fovea graphics provides a set of tools allowing the user to visualize the action of dynamical systems as they evolve over time, or as their parameters change. It adds a new level abstraction to the graphical inheritance structure used by Matplotlib.
+Fovea graphics provides a set of tools allowing the user to visualize the action of dynamical systems as they evolve over time, or as their parameters change. It adds a new level abstraction, called a **Layer** to the graphical inheritance structure used by Matplotlib.
 
-![matplotlib graphical object hierarchy](https://github.com/akuefler/akuefler.github.io/blob/master/images/fig_hierarchy2.png?raw=true)
+![matplotlib graphical object hierarchy](https://github.com/akuefler/akuefler.github.io/blob/master/images/fig_hierarchy.png?raw=true)
 
-**Layers** are a new data structure that can be associated with the subplots, or axes, of a figure. Whereas axes may contain observed data, the Layers lie over these data like transparent slides and can be used to display an algorithm’s current parameter values or iteration step, hidden variables, or any kind of metadata important to the user. graphics.py includes two main classes:
+**Layers** exist as a way of of grouping together related data and meta-data so they can be manipulated together graphically. Each layer includes a number of attributes such as:
+_data_  
+numpy array of numeric data
+
+_dynamic_  
+boolean variable
+
+_zindex_  
+_style_  
+Maximum two character string indicating color and/or style of plotted data (e.g., "r." for a red dot) 
+
+_display_  
+boolean determining visibility of layer
+
+_axes\_vars_  
+List of strings labeling each axis.
+
+_handles_  
+Dictionary of mpl handles belonging to artists in the layer.
+
+_trajs_  
+_scale_  
+_kind_  
+string indicating kind of information displayed in this layer (e.g., "text", "data").
+
+The attributes 'kind' and 'data' are related and especially import. 'Kind' determines the type of data that can be stored in the 'data' field, which is itself a dictionary of fields. For instance, a layer whose 'kind' is "patch" can contain multiple 'datas' (e.g., labeled 'data1', 'data2' and 'data3'), each featuring a 'patch' key whose value is a different matplotlib.patch object. The result could be data in 'data1' plotted as circles,  data from 'data2' plotted as squares, and data from 'data3' plotted as triangles.
+
+The fields of the 'data' attribute of layers includes:
+
+__data:__  
+The raw data itself. This can be a numpy array containing numerical data or a LineCollection object.
+__style:__  
+String. The color and linestyle used to plot the raw data, following matplotlib's coding scheme (e.g., 'k-' will produce a black line).
+__subplot:__  
+String. If the parent Layer of the data  has been assigned to different subplots, this field is used to specify upon which axes the child dataset should be plotted. (e.g., '11' for the the subplot in the first row and first column)
+
+graphics.py includes two main classes for managing GUIs, Layers, and the graphical objects stored inside them:
 
 _plotter2D_ creates the graphical components for specific calculations. It can be used to create and store new figures and Layers and generates artists placed upon them (data, text, axis lines, etc.). For example, two Layers containing clusters of data points observed during two separate experiments may be created and entitled as ‘exp1_data’ and ‘exp2_data’ using separate calls to the method addLayer, then the boundaries of the figure containing these layers may be resized with the method auto_scale_domain. The following code snippet demonstrates how layers can be initialized in a single axes object and used to store different types of data:
 
@@ -49,7 +85,7 @@ Note also that Plotters can be initialized with a diagnostic manager object, whi
 
 _diagnosticGUI_ takes an instance of plotter2D in its constructor and provides user-interactivity with the graphics created by that instance. It creates appropriate widgets that can be used for exploring models (such as a slider for incrementing and decrementing time steps) and provides button callbacks for clicking on the axes. For example, the method getDynamicPoint lets the user click a subplot and store the point clicked on a clipboard for later access.
 
-####GUI vs. Plotter
+#####GUI vs. Plotter
 
 Together, _diagnosticGUI_ and _plotter2D_ provide the front and back ends of Fovea. The GUI class is intended as the user's point of entry to the system. It provides _addDataPoints()_ to enter pointSet data that may later be visualized with the plotter and comes built in with a number of "basic" widgets (the save, capturePoint, refresh and back buttons), which can be hidden by setting the optional parameter "basic_widgets" as False when the display is initialized with _buildPlotter2D()_. The suite of basic widgets can also be extended with the _addWidget()_ method, which saves the user the trouble of creating widget objects with matplotlib and adding them to GUI figures directly. For instance, a slider object (ranging from -10 to 10 and initialized at 0) can be added to the figure and connected to the user's callback (self.slideCallback):
 
@@ -61,7 +97,39 @@ gui.addWidget(Slider, callback=self.slideCallback, axlims = (0.1, 0.055, 0.65, 0
 
 The overall design of _diagnosticGUI_ emphasizes features general to any application, while giving the user the flexibility to patch in their own extensions. Another example is the _key\_on()_ method, which defines hotkeys and connects each to a callback (such as _mouse\_event\_snap()_ in _diagnosticGUI_ and _RectangleSelector_ in matplotlib). Some of these key commands tie into functions defined in the user's application. _diagnosticGUI.assign_user_func()_ takes a callable, such as a function created by the user, and stores this as an attribute of the GUI. This callable (user_func) will then be used by _mouse\_event\_user\_function()_ connected in _key\_on()_.
 
-Although the actions of _plotter2D_ are largely intended to take place within the context of a GUI object, in advanced applications it may be necessary to set properties and give commands to the plotter directly. Currently, **layers** are implemented as a struct (layer_struct) whose fields are the layer's attributes (e.g. data, style, axes_obj) in an instance of _plotter2D_. Any of these properties can be set with _plotter2D.setLayer()_, which along with _addLayer()_, provide the user (at the command line or in user-functions) direct control over how data are displayed and managed in a GUI's subplots.
+Although the actions of _plotter2D_ are largely intended to take place within the context of a GUI object, in advanced applications it may be necessary to set properties and give commands to the plotter directly. Currently, **layers** are implemented as a struct (layer_struct) whose fields are the layer's attributes (e.g. data, style, axes_obj) is an instance of _plotter2D_. Any of these properties can be set with _plotter2D.setLayer()_, which along with _addLayer()_, provide the user (at the command line or in user-functions) direct control over how data are displayed and managed in a GUI's subplots.
+
+To curtail excessive calls to the plotter within the user's application, a number of wrapper methods and convenience functions have been defined for diagnosticGUI. The previous example for setting up a Fovea scenario can be simplified using these methods as follows:
+
+```python
+from fovea.graphics import gui
+
+#Create a root figure
+gui.addFig('Master',  
+    title='Project Title',
+    xlabel='x', ylabel='y',
+    domain=([0,10],[-2,1.5]))
+
+#Create a single axes object at 11, containing our layers.
+gui.setup({'11':  
+    {'name': 'Two Experiments',
+     'scale': ([0, 10], [-2, 1.5]),
+     'layers': ['exp1_data', 'exp2_data'],
+     'axes_vars': ['x', 'y']}
+    },
+    size= (8, 8), with_times= False)
+
+#Add list data to our layers.
+gui.addDataPoints(dataset1, layer='exp1_data', style='k-')
+gui.addDataPoints(dataset2, layer='exp2_data', style='r-')
+
+gui.show()
+
+```
+Notice that the previous calls to _plotter.addFig()_ and _plotter.show()_ have been replaced with the equivalent _gui.addFig()_ and _gui.show()_ and _gui.addDataPoints()_ now takes the place of _gui.addData()_. Furthermore, the calls to _plotter.addLayer()_ have been removed altogether. Instead _addDataPoints()_, upon receiving 'exp1_data' and 'exp2_data' as layer arguments, understands that these are new layers to be added to the plotter and calls _plotter.addLayer()_ internally. _gui.setup()_ also combines _plotter.arrangeFig()_ and _plotter.buildPlotter2D()_ into a convenient function, as these two methods will often be called together. An added benefit to using _gui.setup()_ is that it is no longer necessary to specify the shape of the figure arrangement explicity. The function looks at the keys of arrPlots (its first positional argument) and infers the largest row column values should define the shape of the figure. For example, if the keys of the dict passed into _gui.setup()_ are '11', '12', '21', '22', the figure will be arranged 2-by-2.
+
+
+#####Importing vs. Subclassing
 
 ###2. domain2D.py
 In some applications, it may be necessary to monitor how the output of a function changes across the xy-plane. For instance, if a trajectory is being plotted through a vector field, the ability to highlight regions of the field where moving objects might get stuck could be invaluable.  _domain2D_ provides utilities for creating such "domains of interest" based on spatial variables in the xy-plane. It consists of two classes, _polygon\_domain_ and _GUI\_domain\_handler_, in addition to two functions, _edge\_lengths_ and _merge\_to\_polygon_.
