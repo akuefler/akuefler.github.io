@@ -130,6 +130,39 @@ Notice that the previous calls to _plotter.addFig()_ and _plotter.show()_ have b
 
 
 #####Importing vs. Subclassing
+When you are ready to use Fovea in your own setting, you have the option of importing a vanilla version of the GUI (```python with from fovea.graphics import gui ```), as we have already seen. Or you can create your own class, which subclasses diagnosticGUI. The vanilla version is a global singleton instance defined with a plotter2D object at the bottom of graphics.py. For problems that can be solved with the suite of tools built in for diagnosticGUI and plotter2D, using the imported GUI should be sufficient. However, if you wish to create your own methods that interact with diagnosticGUI's internal attributes, a customized gui can be easily created.
+
+```python
+from fovea import graphics
+
+class customGUI(graphics.diagnosticGUI):
+    def __init__(self, title):
+
+        plotter = graphics.plotter2D()
+        graphics.diagnosticGUI.__init__(self, plotter)
+
+        self.fig = 'master'
+        self.title = 'my_project'
+        self.doi = [(0, 100),(0, 1)]
+
+        name = 'layer_name'
+
+        self.do_fovea_stuff(name)
+
+    def do_fovea_stuff(self, name):
+        self.addFig(self.fig,  
+            title= self.title,
+            xlabel='x', ylabel='y',
+            domain= self.doi)
+
+        self.plotter.addLayer(name)
+```
+
+The class customGUI initializes graphics.diagnosticGUI as its superclass with a plotter object. Any instance of customGUI can be acted on by diagnosticGUI and plotter2D methods such as _addFig()_ and _addLayer()_. In addition, new functions such as _do\_fovea\_stuff()_ can be defined by the user and used like any other diagnosticGUI method.
+
+In some circumstances, it is necessary to create a custom object that subclasses diagnosticGUI. _diagnosticGUI.make\_gen()_ is a method for creating PyDSTool generator models, which may vary enormously in form, depending on the user's needs. As such, _make\_gen()_ is left empty and will raise a NotImplementedError if called by the global singleton gui. It is up the user to override this method (by defining in the subclass their own method of the same name), if they wish to associate their own PyDSTool model with the GUI. Similarly, _user\_nav\_func()_ will also be called when diagnosticGUI navigation keys (see next section, Callbacks) are pressed, even though it is left empty. The method is there to be overridden if some special behavior is desired during context object navigation.
+
+#####Callbacks
 
 ###2. domain2D.py
 In some applications, it may be necessary to monitor how the output of a function changes across the xy-plane. For instance, if a trajectory is being plotted through a vector field, the ability to highlight regions of the field where moving objects might get stuck could be invaluable.  _domain2D_ provides utilities for creating such "domains of interest" based on spatial variables in the xy-plane. It consists of two classes, _polygon\_domain_ and _GUI\_domain\_handler_, in addition to two functions, _edge\_lengths_ and _merge\_to\_polygon_.
