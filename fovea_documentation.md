@@ -27,14 +27,14 @@ _axes\_vars_
 List of strings labeling each axis.
 
 _handles_  
-Dictionary of mpl handles belonging to artists in the layer.
+Ordered Dictionary of mpl handles belonging to artists in the layer. The keys correspond to names of the data stored in the data field (i.e., they should have a one-to-one correspondence with layer_struct.data.keys after the artist has been drawn with a call to _buildLayer_), each valued with a single matplotlib object. An ordered dictionary is used to facilitate cycling between handles in a single layer with keypresses (see the section on navigation callbacks for more information) ISSUE: link?. ISSUE: Because it reuses the same keys as data, it may make more sense to store handles at the data-level, rather than the layer-level.
 
 _trajs_  
 _scale_  
 _kind_  
 string indicating kind of information displayed in this layer (e.g., "text", "data").
 
-The attributes 'kind' and 'data' are related and especially import. 'Kind' determines the type of data that can be stored in the 'data' field, which is itself a dictionary of fields. For instance, a layer whose 'kind' is "patch" can contain multiple 'datas' (e.g., labeled 'data1', 'data2' and 'data3'), each featuring a 'patch' key whose value is a different matplotlib.patch object. The result could be data in 'data1' plotted as circles,  data from 'data2' plotted as squares, and data from 'data3' plotted as triangles.
+The attributes 'kind' and 'data' are related and especially import. 'Kind' determines the type of data that can be stored in the 'data' field, which is itself a dictionary of fields. For instance, a layer whose 'kind' is "patch" can contain multiple 'datas' (e.g., labeled 'data1', 'data2' and 'data3'), each featuring a 'patch' key whose value is a different matplotlib.patch object. The result could be data in 'data1' plotted as ellipses,  data from 'data2' plotted as squares, and data from 'data3' plotted as triangles.
 
 The fields of the 'data' attribute of layers includes:
 
@@ -84,6 +84,48 @@ plotter.show()
 Note also that Plotters can be initialized with a diagnostic manager object, which ensure saves are stored on a path visible to the diagnostics tools.
 
 _diagnosticGUI_ takes an instance of plotter2D in its constructor and provides user-interactivity with the graphics created by that instance. It creates appropriate widgets that can be used for exploring models (such as a slider for incrementing and decrementing time steps) and provides button callbacks for clicking on the axes. For example, the method getDynamicPoint lets the user click a subplot and store the point clicked on a clipboard for later access.
+
+#####Turning Layers into Graphics
+From the user's perspective, Layers may be thought of as transparent slides that are placed over one another on an axes subplot. But more accurately, a Layer is a set of instructions telling the plotter what artists should be created on which subplots with which properties. These specifications are stored in the layer structure described above and consolidated in _plotter2D.buildLayer_. When called with @param force  set to true, _buildLayer_ clears all artist handles from the given layer (@param lay), then loops through each data struct found in lay.data. The function uses the layer kind (lay.kind) to determine how each data item should be converted into an artist on the axes. If an artist for the data item by that name has already been created (i.e., an entry exists for that name in lay.handles), it will be replaced. Alternatively, if @param force is False, the current artists will not be cleared, and new artists will not replace older artists keyed with the same name.
+
+Layers currently support four different kinds: 'data', 'text', 'patch' and 'obj'. Each one has a corresponding plotter2D method for adding artist specifications to the list of instructions that is the layer structure.
+
+_addData_
+Accepts a pair of sequences in [x, y] format (@param data), which are eventually converted into a matplotlib.lines.line2D in _buildLayer_ with a call to mpl's _plot()_ function. Given three numeric sequences [x, y, z] for @param data, _addData_ will create 3-dimensional data, but the 'projection' type of the axes must be set to '3d' in the call to plotter.arrangeFig for 3d plotting to work. A mpl.collections.LineCollection object can also be provided for @param data, in which case, _buildLayer_ will add an artist to the axes with .add_collection. 
+
+Add data is also unique in that calling this method will create a PyDSTool Trajectory object that underlies the data added. The internal method _.\_updateTraj()_ called by _addData()_ will convert @param traj (a PyDSTool Pointset given to _addData_) into a Trajectory stored as a value in the .trajs field of the given layer's struct. If @param traj is None, a traj is created with the PyDSTool method _numeric\_to\_traj_ from @param data. Trajs allow the snap callback (ISSUE: link?) locate a point on the data.
+
+
+_addText_
+Takes a string for @param text to be displayed at [x, y] coordinates @param data. The text will eventually be created on the given axes with a call to mpl's _.text()_ method. If @param use\_axis\_coords is True, the [x, y] position is treated as a fraction of the length of the x and y limits of the axes (i.e., @param data = [0.5, 0.5] will produce place the text in the center of the axes, [1, 0] in its bottom-right corner, [1, 1] in its top-right, etc.'). If use\_axis\_coords is false, the position of the text is simply at that position on the axes (so if you want to label a data point with a bit of text, they can have the same values for lay.data.data).
+
+_addPatch_  
+Like _addData_, this method accepts a pair of [x, y] sequences. Each pair in the sequence specifies the position of a patch to be created from the parameter @param patch, which should itself be a callable matplotlib patch object. In _buildLayer_, matplotlib's _add\_artist_ is called with @param patch (with _addPatch_'s kwargs as its arguments)
+
+ISSUE: Currently, addPatch assumes a 'radius' keyword has been provided and will only work for patches that use this keyword (such as circles).
+
+_addObj_  
+Similar behavior to _addPatch_, except @param obj replaces @param patch, and can be any callable object. It has only been tested for instances of obj = mpl.lines.line2D and obj = mpl.patches.Rectangle. Currently only used to created context objects (box_GUIs and line_GUIs).
+
+ISSUE: I might suggest merging addPatch and addObj into a single function, since both exist to create a chosen mpl object at the positions specified in data with some kwargs. Alternatively, it might be useful to rename addObj to addConObj and include some error handling to ensure it's only used to create context objects, since that's what it's being used for now.
+
+Parameters shared by each add method include the figure, layer and subplot the artists should appear in. The parameters figure and layer will accept only the string name of the given structure, but subplot can be given either a string (e.g., '11' for the top-left subplot, or '21' for the bottom-left on a 4-by-4 grid), or the matplotlib axes object located on the figure. Note that, when given an axes object, the add methods will translate it into a subplot-string before storing it in the data's structure. The subplot can also only be specified when the given layer has been added to multiple subplot's in the call to _arrangeFig_. If a layer occurs in multiple subplots, but @param subplot is left as None, the artist will default to the first subplot its layer belongs to.
+
+A few other add methods are included for the user's convenience. The following methods don't have their own layer type, but instead wrap _addData_.
+
+_addLineByPoints_  
+
+_addPoint_  
+
+_addVLine_  
+
+_addHLine_  
+
+Once the data and layer structures have been specified with calls to _plotter2D_'s different add methods, the graphics can finally be displayed with _buildLayer_. However, _plotter2d.show()_ will typically be the calling function of _buildLayer_, as it loops through each subplot in the arrangement and each layer in the figure applying all the changes specified by the different add and set methods. In summary, _addData_, _addText_, _addPatch_, and _addObj_ create specifications for graphical objects to be displayed, but the actual execution of these specifications occurs in _show()_.
+
+
+#### Adding Data
+In the previous section, we saw how add functions ...
 
 #####GUI vs. Plotter
 
@@ -295,7 +337,7 @@ _axes\_vars_
 List of strings labeling each axis.
 
 _handles_  
-Dictionary of mpl handles belonging to artists in the layer.
+Ordered Dictionary of mpl handles belonging to artists in the layer. The keys correspond to names of the data stored in the data field (i.e., they should have a one-to-one correspondence with layer_struct.data.keys after the artist has been drawn with a call to _buildLayer_), each valued with a single matplotlib object. An ordered dictionary is used to facilitate cycling between handles in a single layer with keypresses (see the section on navigation callbacks for more information) ISSUE: link?. ISSUE: Because it reuses the same keys as data, it may make more sense to store handles at the data-level, rather than the layer-level.
 
 _trajs_  
 _scale_  
