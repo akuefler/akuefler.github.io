@@ -485,10 +485,42 @@ gui.selected_object = gui.context_objects["my_object"]
 Assigning the .selected_object attribute directly will not update the data properties seen by _plotter2D_ and _buildLayer_.
 
 ####User Extensions
-Users will inevitably run into the need to define their own keypresses.
+Users will inevitably run into the need to define their own keypresses. Fortunately, matplotlib can be used to add these to a user defined subclass of diagnosticGUI with little interference to Fovea (assuming the keys chosen are not already built into Fovea). The code snippet below is a rough-and-ready template for a diagnosticGUI subclass key handler. A more detailed demo (including instructions for a vanilla diagnosticGUI) can be found at (ISSUE: link PCA blogpost?).
 
-...Overridable functions
-...More keypresses
+```python
+class customGUI(graphics.diagnosticGUI):
+
+    def __init__(self, title):
+        plotter = graphics.plotter2D()
+        graphics.diagnosticGUI.__init__(self, plotter)
+
+        evKeyOn = self.fig.canvas.mpl_connect('key_press_event', self.ssort_key_on)
+
+    def key_on(self, ev):
+        self._key = k = ev.key  # keep record of last keypress
+
+        if k == '1':
+            do(x)
+
+        if k == '2':
+            do(y)
+
+        self.plotter.show()
+``
+
+Note that the function name _key\_on()_ is the same used by Fovea's native key handler. Using this name will override Fovea's handler, thus rendering the built-in keypresses unresponsive. If a user wishes to retain the old keypresses in addition to adding new ones, a different name can be chosen. As such, before using a subclassed diagnosticGUI, it is important to familiarize onself with diagnosticGUI's functions to avoid overriding something important. However, not all function overrides are detrimental, and there are some instances in which Fovea even encourages them.
+
+The following functions are defined and called inside Fovea, but are left empty. They as hooks where users can patch in some additional behavior to Fovea functions that often require tailoring.
+
+_user\_update\_func:  
+Called in _shape\_GUI.update()_. Since _update_ is used to translate context objects, overriding _user\_update\_func_ with a custom function can be used to trigger events or calculations whenever a user moves a context object. For an example see (ISSUE: link? spike sort blog)
+
+_user\_pick\_func:  
+Called in _diagnosticGUI.pick\_on()_. Although only one object can be set as the selected object at a time, a user might want to highlight other objects or perform calculations whenever one object is picked. _user\_pick\_func receives the pick event, from which properties can be retreived (such as event.artist for the picked artist). For an example see (ISSUE: link? spike sort blog)
+
+_make\_gen_:  
+Called in _diagnosticGUI.setup\_gen()_. Takes as input a dictionary of model parameters (@param pardict) and a model name (@param name) and creates a new generator model if one does not already exist. For an example, see examples/bombardier/fovea_game.py.
+
 
 ###2. domain2D.py
 In some applications, it may be necessary to monitor how the output of a function changes across the xy-plane. For instance, if a trajectory is being plotted through a vector field, the ability to highlight regions of the field where moving objects might get stuck could be invaluable.  _domain2D_ provides utilities for creating such "domains of interest" based on spatial variables in the xy-plane. It consists of two classes, _polygon\_domain_ and _GUI\_domain\_handler_, in addition to two functions, _edge\_lengths_ and _merge\_to\_polygon_.
