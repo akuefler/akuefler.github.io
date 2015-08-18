@@ -356,7 +356,7 @@ Prints the current graphical hierarchy to the command line, displaying the organ
 _timeBar_  
 This slider will appear if _buildPlotter2D_ is called with @param with_times = True. It can be used to increment or decrement the data's current time step. +dt and -dt buttons are also provided.
 
-If _buildPlotter2D_ is called with @param callbacks_on = True, a number of keypresses and pickers will be initialized for manipulating data as well:  
+If _buildPlotter2D_ is called with @param callbacks_on = True, a number of __keypresses__  and __pickers__ will be initialized for manipulating data as well:  
 
 _Lines (key: "l")_  
 Activates a line selector, then click and drag to create a line of interest (line_GUI). Lines can be repositioned with navigation keys or defined with PyDSTool Events. For more information on lines see the "Context Objects" section below.
@@ -407,7 +407,7 @@ gui.assign_user_func(self.get_displacements)
 ISSUE: Fovea provides most user hooks by creating an empty function to be overridden (e.g., user_nav_func), these should be replaced with assign_funcs like the ones above (or the assign_funcs should be replaced with overridable empty functions like user_nav_func) so the style remains consistent and easy to learn. It would probably make more sense to go with assign_funcs, as the overrides can only be used if the user wants to subclass diagnosticGUI.
 
 
-Note that these callbacks will only work in subplots, in which they have been assigned during the call to arrangeFig. For example, if the figure is arranged like below, then all the callbacks will work, but only when clicking on the axes of the second subplot:
+Note that these callbacks will only work in subplots in which they have been assigned during the call to arrangeFig. For example, if the figure is arranged like below, then all the callbacks will work, but only when clicking on the axes of the second subplot:
 
 ```python
 plotter.arrangeFig([1,2], 
@@ -429,12 +429,66 @@ plotter.arrangeFig([1,2],
 ISSUE: If the 'callbacks' value is not None, all are activated. 'callbacks' should instead receive a list, to activate them individually.
 ISSUE: Seems redundant to both have an initializing statement in buildPlotter2D and arrangeFig. initialize_callbacks should just be called in arrangeFig.
 
+####Selecting Data and Context Objects
+Any artist on a 2D subplot can be picked by clicking on or near them. When an artist is picked, it is redrawn with a thicker line or bigger markers, and set as the currently selected object (found at diagnosticGUI.selected_object). The selected object can be either data or a context object, each represented by different class:
+
+ISSUE: Include image?
+
+**Class data\_GUI**
+_data\_GUI_s are a redumentary object implementation of clicked data (e.g., artists added to layers of kind = 'data'). They wrap up important properties of data in one place for easy reference. For instance, after picking a data selected object, the name, layer and handle of that artist can be retrieved from gui.selected_object.name, gui.selected_object.layer, gui.selected_object.handle. 
+
+Unlike context objects, data_GUIs are created the moment data are clicked, have no methods, and are forgotten about as soon as a new selected_object is clicked. They exist largely so that the functions for picking and setting selected objects behave consistently, whether data or context objects are picked. However, future versions of Fovea may flesh out this class with methods that provide more tools for handling data.
+
+**Class context_object**
+The context_object is an abstract base class representing objects created by the user for analyzing data. These currently include lines, boxes and growable domains. After a context_object has been created, it is set as the currently selected object and stored in the context objects dictionary found at gui.context_objects. The object's .name attribute serves as the dictionary key.
+
+**Class shape\_GUI (subclasses context_object)**
+_shape\_GUI_ is the parent class of lines (_line\_GUI_) and boxes (_box\_GUI_) created with the "l" and "b" keypresses. Events can be created for shape_GUIs using _.make\_event\_def()_. For line_GUIs, these events will by triggered by crossing trajectories, for box_GUIs, they are triggered by trajectories crossing the box's main diagonal. shape_GUIs can also be manipulated using the navigation keys described later.
+
+**Class domain\_GUI (subclasses context_object)**
+Polygonal domains grown by "." keypress. See the section on domain2D.py for more details.
+
+When a context object has been selected an additional library of hotkeys can be used to manipulate, or __navigate__ that specific object. Of the following, only the "up" and "down" error keys can be used on data_GUIs as well:
+
+_Move/Cycle ("up", "down", "left" and "right")_
+Translates context objects across the axes.
+
+If data_GUI is selected, cycles between each data in the given layer as the selected object.
+
+_Delete ("backspace")_
+Removes the selected object from the axes and the context objects dictionary.
+
+_Force to Extent ("m")_
+line_GUIs only. Make the currently selected line horizontal (its y-intercept at the original line's midpoint) and span the axes.
+
+_Rename ("n")_
+Prompts user for string input and changes name of the selected object to that string. An object can also be renamed at the command line as follows:
+
+```python
+gui.selected_object.update(name = "new_name")
+``
+
+ISSUE: Rename key causes "RuntimeError: can't re-enter readline".
+
+Note also that selected objects can be set from the command line. It is crucial that manually selecting an object is performed with _set\_selected\_object()_ and NOT with direct assignment of the .selected_object attribute.
+
+CORRECT:
+```python
+gui.set_selected_object(gui.context_objects["my_object"])
+``
+
+INCORRECT:
+```python
+gui.selected_object = gui.context_objects["my_object"]
+``
+
+Assigning the .selected_object attribute directly will not update the data properties seen by _plotter2D_ and _buildLayer_.
+
 ####User Extensions
+Users will inevitably run into the need to define their own keypresses.
 
-####Context Objects
-
-#####User Functions
-
+...Overridable functions
+...More keypresses
 
 ###2. domain2D.py
 In some applications, it may be necessary to monitor how the output of a function changes across the xy-plane. For instance, if a trajectory is being plotted through a vector field, the ability to highlight regions of the field where moving objects might get stuck could be invaluable.  _domain2D_ provides utilities for creating such "domains of interest" based on spatial variables in the xy-plane. It consists of two classes, _polygon\_domain_ and _GUI\_domain\_handler_, in addition to two functions, _edge\_lengths_ and _merge\_to\_polygon_.
