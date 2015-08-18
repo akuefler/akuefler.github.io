@@ -432,36 +432,36 @@ ISSUE: Seems redundant to both have an initializing statement in buildPlotter2D 
 ####Selecting Data and Context Objects
 Any artist on a 2D subplot can be picked by clicking on or near them. When an artist is picked, it is redrawn with a thicker line or bigger markers, and set as the currently selected object (found at diagnosticGUI.selected_object). The selected object can be either data or a context object, each represented by different class:
 
-ISSUE: Include image?
+![GUI token objects shown on subplots](https://github.com/akuefler/akuefler.github.io/blob/master/images/gui_tokens.png?raw=true)
 
-**Class data\_GUI**
+**Class data\_GUI**  
 _data\_GUI_s are a redumentary object implementation of clicked data (e.g., artists added to layers of kind = 'data'). They wrap up important properties of data in one place for easy reference. For instance, after picking a data selected object, the name, layer and handle of that artist can be retrieved from gui.selected_object.name, gui.selected_object.layer, gui.selected_object.handle. 
 
 Unlike context objects, data_GUIs are created the moment data are clicked, have no methods, and are forgotten about as soon as a new selected_object is clicked. They exist largely so that the functions for picking and setting selected objects behave consistently, whether data or context objects are picked. However, future versions of Fovea may flesh out this class with methods that provide more tools for handling data.
 
-**Class context_object**
+**Class context_object**  
 The context_object is an abstract base class representing objects created by the user for analyzing data. These currently include lines, boxes and growable domains. After a context_object has been created, it is set as the currently selected object and stored in the context objects dictionary found at gui.context_objects. The object's .name attribute serves as the dictionary key.
 
-**Class shape\_GUI (subclasses context_object)**
+**Class shape\_GUI (subclasses context_object)**  
 _shape\_GUI_ is the parent class of lines (_line\_GUI_) and boxes (_box\_GUI_) created with the "l" and "b" keypresses. Events can be created for shape_GUIs using _.make\_event\_def()_. For line_GUIs, these events will by triggered by crossing trajectories, for box_GUIs, they are triggered by trajectories crossing the box's main diagonal. shape_GUIs can also be manipulated using the navigation keys described later.
 
-**Class domain\_GUI (subclasses context_object)**
+**Class domain\_GUI (subclasses context_object)**  
 Polygonal domains grown by "." keypress. See the section on domain2D.py for more details.
 
 When a context object has been selected an additional library of hotkeys can be used to manipulate, or __navigate__ that specific object. Of the following, only the "up" and "down" error keys can be used on data_GUIs as well:
 
-_Move/Cycle ("up", "down", "left" and "right")_
+_Move/Cycle ("up", "down", "left" and "right")_  
 Translates context objects across the axes.
 
 If data_GUI is selected, cycles between each data in the given layer as the selected object.
 
-_Delete ("backspace")_
+_Delete ("backspace")_  
 Removes the selected object from the axes and the context objects dictionary.
 
-_Force to Extent ("m")_
+_Force to Extent ("m")_  
 line_GUIs only. Make the currently selected line horizontal (its y-intercept at the original line's midpoint) and span the axes.
 
-_Rename ("n")_
+_Rename ("n")_  
 Prompts user for string input and changes name of the selected object to that string. An object can also be renamed at the command line as follows:
 
 ```python
