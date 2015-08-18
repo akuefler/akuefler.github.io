@@ -30,6 +30,8 @@ _handles_
 Ordered Dictionary of mpl handles belonging to artists in the layer. The keys correspond to names of the data stored in the data field (i.e., they should have a one-to-one correspondence with layer_struct.data.keys after the artist has been drawn with a call to _buildLayer_), each valued with a single matplotlib object. An ordered dictionary is used to facilitate cycling between handles in a single layer with keypresses (see the section on navigation callbacks for more information) ISSUE: link?. ISSUE: Because it reuses the same keys as data, it may make more sense to store handles at the data-level, rather than the layer-level.
 
 _trajs_  
+A dictionary of PyDSTool Trajectories belonging to artists in a layer. The keys correspond to names of the data stored in the 'data' field, each valued with a single PyDSTool Trajectory created by the internal function _\_updateTraj()_.
+
 _scale_  
 _kind_  
 string indicating kind of information displayed in this layer (e.g., "text", "data").
@@ -38,11 +40,13 @@ The attributes 'kind' and 'data' are related and especially import. 'Kind' deter
 
 The fields of the 'data' attribute of layers includes:
 
-__data:__  
-The raw data itself. This can be a numpy array containing numerical data or a LineCollection object.
-__style:__  
+_data:_  
+The raw data itself. This can be a numpy array containing numerical data or a LineCollection object. For non-numeric objects one wishes to display in the axes (such as matplotlib patches), the data field stores the position of the object.
+
+_style:_  
 String. The color and linestyle used to plot the raw data, following matplotlib's coding scheme (e.g., 'k-' will produce a black line).
-__subplot:__  
+
+_subplot:_  
 String. If the parent Layer of the data  has been assigned to different subplots, this field is used to specify upon which axes the child dataset should be plotted. (e.g., '11' for the the subplot in the first row and first column)
 
 graphics.py includes two main classes for managing GUIs, Layers, and the graphical objects stored inside them:
@@ -93,7 +97,7 @@ Layers currently support four different kinds: 'data', 'text', 'patch' and 'obj'
 _addData_
 Accepts a pair of sequences in [x, y] format (@param data), which are eventually converted into a matplotlib.lines.line2D in _buildLayer_ with a call to mpl's _plot()_ function. Given three numeric sequences [x, y, z] for @param data, _addData_ will create 3-dimensional data, but the 'projection' type of the axes must be set to '3d' in the call to plotter.arrangeFig for 3d plotting to work. A mpl.collections.LineCollection object can also be provided for @param data, in which case, _buildLayer_ will add an artist to the axes with .add_collection. 
 
-Add data is also unique in that calling this method will create a PyDSTool Trajectory object that underlies the data added. The internal method _.\_updateTraj()_ called by _addData()_ will convert @param traj (a PyDSTool Pointset given to _addData_) into a Trajectory stored as a value in the .trajs field of the given layer's struct. If @param traj is None, a traj is created with the PyDSTool method _numeric\_to\_traj_ from @param data. Trajs allow the snap callback (ISSUE: link?) locate a point on the data.
+Add data is also unique in that calling this method will create a PyDSTool Trajectory object that underlies the data added. The internal method _.\_updateTraj()_ called by _addData()_ will convert @param trajs (a PyDSTool Pointset given to _addData_) into a Trajectory stored as a value in the .trajs field of the given layer's struct. If @param trajs is None, a traj is created with the PyDSTool method _numeric\_to\_traj_ from @param data. Trajs allow the snap callback (ISSUE: link?) to locate a point on the data.
 
 
 _addText_
@@ -124,7 +128,7 @@ _addHLine_
 Once the data and layer structures have been specified with calls to _plotter2D_'s different add methods, the graphics can finally be displayed with _buildLayer_. However, _plotter2d.show()_ will typically be the calling function of _buildLayer_, as it loops through each subplot in the arrangement and each layer in the figure applying all the changes specified by the different add and set methods. In summary, _addData_, _addText_, _addPatch_, and _addObj_ create specifications for graphical objects to be displayed, but the actual execution of these specifications occurs in _show()_.
 
 
-#### Adding PyDSTool Pointsets
+#####Adding PyDSTool Pointsets
 In the previous section, we saw how different _plotter2D_ add methods can be used to create the specifications of artists to be displayed in a Fovea GUI. Due to the importance of adding data to layers and the repition with which these methods will be called, the _diagnosticGUI_ method _addDataPoints()_ is included to add multiple different kinds of artist simultaneously. In other words, _diagnosticGUI.addDataPoints()_ attempts to translate any type of inputs it receives into the specifications in a layer's structure.
 
 In the simplest case, if @param data is a numpy array or a 2 or 3 dimensional list, _addDataPoints()_ acts as a wrapper function, calling _plotter2D.addData()_ with _addDataPoints()_'s arguments.
@@ -471,6 +475,8 @@ _handles_
 Ordered Dictionary of mpl handles belonging to artists in the layer. The keys correspond to names of the data stored in the data field (i.e., they should have a one-to-one correspondence with layer_struct.data.keys after the artist has been drawn with a call to _buildLayer_), each valued with a single matplotlib object. An ordered dictionary is used to facilitate cycling between handles in a single layer with keypresses (see the section on navigation callbacks for more information) ISSUE: link?. ISSUE: Because it reuses the same keys as data, it may make more sense to store handles at the data-level, rather than the layer-level.
 
 _trajs_  
+A dictionary of PyDSTool Trajectories belonging to artists in a layer. The keys correspond to names of the data stored in the 'data' field, each valued with a single PyDSTool Trajectory created by the internal function _\_updateTraj()_.
+
 _scale_  
 _kind_  
 string indicating kind of information displayed in this layer (e.g., "text", "data").
