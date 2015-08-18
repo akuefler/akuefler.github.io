@@ -402,7 +402,7 @@ def get_displacements(x, y):
     return dict(zip(ixs, Fs)), dict(zip(ixs, zip(Fxs, Fys)))
 
 gui.assign_user_func(self.get_displacements)
-``
+```
 
 ISSUE: Fovea provides most user hooks by creating an empty function to be overridden (e.g., user_nav_func), these should be replaced with assign_funcs like the ones above (or the assign_funcs should be replaced with overridable empty functions like user_nav_func) so the style remains consistent and easy to learn. It would probably make more sense to go with assign_funcs, as the overrides can only be used if the user wants to subclass diagnosticGUI.
 
@@ -424,7 +424,7 @@ plotter.arrangeFig([1,2],
         'callbacks': '*',
         'axes_vars': ['a', 'b']},
     })
-``
+```
  
 ISSUE: If the 'callbacks' value is not None, all are activated. 'callbacks' should instead receive a list, to activate them individually.
 ISSUE: Seems redundant to both have an initializing statement in buildPlotter2D and arrangeFig. initialize_callbacks should just be called in arrangeFig.
@@ -466,7 +466,7 @@ Prompts user for string input and changes name of the selected object to that st
 
 ```python
 gui.selected_object.update(name = "new_name")
-``
+```
 
 ISSUE: Rename key causes "RuntimeError: can't re-enter readline".
 
@@ -475,12 +475,12 @@ Note also that selected objects can be set from the command line. It is crucial 
 CORRECT:
 ```python
 gui.set_selected_object(gui.context_objects["my_object"])
-``
+```
 
 INCORRECT:
 ```python
 gui.selected_object = gui.context_objects["my_object"]
-``
+```
 
 Assigning the .selected_object attribute directly will not update the data properties seen by _plotter2D_ and _buildLayer_.
 
@@ -506,7 +506,7 @@ class customGUI(graphics.diagnosticGUI):
             do(y)
 
         self.plotter.show()
-``
+```
 
 Note that the function name _key\_on()_ is the same used by Fovea's native key handler. Using this name will override Fovea's handler, thus rendering the built-in keypresses unresponsive. If a user wishes to retain the old keypresses in addition to adding new ones, a different name can be chosen. As such, before using a subclassed diagnosticGUI, it is important to familiarize onself with diagnosticGUI's functions to avoid overriding something important. However, not all function overrides are detrimental, and there are some instances in which Fovea even encourages them.
 
