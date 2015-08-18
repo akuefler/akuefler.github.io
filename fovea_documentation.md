@@ -124,8 +124,139 @@ _addHLine_
 Once the data and layer structures have been specified with calls to _plotter2D_'s different add methods, the graphics can finally be displayed with _buildLayer_. However, _plotter2d.show()_ will typically be the calling function of _buildLayer_, as it loops through each subplot in the arrangement and each layer in the figure applying all the changes specified by the different add and set methods. In summary, _addData_, _addText_, _addPatch_, and _addObj_ create specifications for graphical objects to be displayed, but the actual execution of these specifications occurs in _show()_.
 
 
-#### Adding Data
-In the previous section, we saw how add functions ...
+#### Adding PyDSTool Pointsets
+In the previous section, we saw how different _plotter2D_ add methods can be used to create the specifications of artists to be displayed in a Fovea GUI. Due to the importance of adding data to layers and the repition with which these methods will be called, the _diagnosticGUI_ method _addDataPoints()_ is included to add multiple different kinds of artist simultaneously. In other words, _diagnosticGUI.addDataPoints()_ attempts to translate any type of inputs it receives into the specifications in a layer's structure.
+
+In the simplest case, if @param data is a numpy array or a 2 or 3 dimensional list, _addDataPoints()_ acts as a wrapper function, calling _plotter2D.addData()_ with _addDataPoints()_'s arguments.
+
+The bigger appeal of _addDataPoints()_ is using it to convert PyDSTool Pointsets into different types of artists. Because a Pointsets is essentially a list of named arrays with arbitrary names provided by the user, @param coorddict is used to specify how each dimension in the Pointset is supposed to be used to create an artist. They keys of coorddict should be the names of only those dimensions of the Pointset the user wishes to be represented graphically. For instance, a Pointset may include dimensions for x and y positions of a trajectory (named 'posx' and 'posy' respectively), in addition to the velocity of that trajectory (named 'velx' and 'vely') at each timestep. If the user wishes to plot out the trajectory and a graph of its changing velocity (while perhaps not including some fifth, irrelevant variable 'var' from the graph), they do this by adding each desired variable as a key in coorddict.
+
+```python
+coorddict = {'posx': {inner_dict}, 'velx': {inner_dictionary}}
+```
+
+Note that even though the dimensions 'posy' and 'vely' require graphical representation, they are not included as keys in coorddict, because they will belong to the same objects as 'posx' and 'velx' respectively. To specify that these variables are to be treated as the 'y' dimensions of 'posx' and 'posy', they can be added as values of the 'y' keywords in the inner_dicts shown above like so:
+
+```python
+coorddict = {'posx': {'y': 'posy'}, 'velx': {'y':'vely'}}
+```
+
+This is equivalent to writing:
+
+```python
+coorddict = {'posy': {'x': 'posx'}, 'vely': {'x':'velx'}}
+```
+
+Or even the more redundant:
+
+```python
+coorddict = {'posx': {'x': 'posx', y': 'posy'}, 'velx': {'x':'velx', y':'vely'}}
+```
+
+In addition to the 'x' and 'y' keywords already shown, the values of coorddict can be keyed with the following:
+
+_'name'_
+The name of the data structure to be added by the plotter.
+
+_'layer'_  
+The layer to which the data are to be added. Unlike _plotter.addData_, _addDataPoints_ call add a new layer to the plotter if the value of this key doesn't currently exist.
+
+_'style'_  
+The style in which the artist should be displayed.
+
+_'object'_  
+The type of artist to be displayed. If left empty, _addDataPoints()_ will use _addData()_ to display scatter or line data. Also currently accepts the string 'circle' to use _addPatch()_ to create an instance of a pyplot circle. The string 'collection' is also an admissable value, and will add a lineCollections to the axes using _addData()_
+
+_'map\_radius\_to'_  
+The value belonging to this key must specify the name of the Pointset dimension (@param data) to which the given coorddict key should be used as the radii parameter. Only applicable when the coorddict key's value includes {'object':'circle'}.
+
+The following code example demonstrates an instance in which the _'map\_radius\_to'_ parameter might be used. Here, 'px' and 'py' are the plotting variables specifying the positions of a series of circles, whereas 'radii' is a sequence of numbers specifying the radius of each circle:
+
+```python
+from PyDSTool import *
+
+bodsPoints = Pointset({'coordarray': np.array([[self.pos[i][0] for i in range(len(self.pos))],
+    [self.pos[i][1] for i in range(len(self.pos))],
+    [self.radii[i] for i in range(len(self.radii))]]),
+    'coordnames': ['px', 'py', 'radii']})
+coorddict = 
+    {'px':
+        {'x':'px', 'y':'py','layer':'bodies','name':'bods1', 'style':'g', 'object':'circle'},
+    'radii':
+        {'map_radius_to':'px'}
+    }
+diagnosticGUI.addDataPoints(bodsPoints, coorddict=coorddict)
+```
+
+ISSUE: It might make more sense if 'map\_radius\_to'  was changed to make 'radii' and would behave like so:
+
+```python
+coorddict = 
+    {'px':
+        {'x':'px', 'y':'py','layer':'bodies','name':'bods1', 'style':'g', 'object':'circle', 'radii':'radii'},
+    }
+```
+
+Once this format is used to create specifications of how the plotter should use each dimension of the Pointset input, multiple datasets of different types can be plotted with a single call to _addDataPoints()_. The following code snippets both plot the same artists, but demonstrate the difference between adding data at the diagnosticGUI level (with _addDataPoints_) and adding data at the plotter2D level (with _addData_).
+
+Using _plotter.addData_:
+
+```python
+plotter.addLayer('V')
+plotter.addData([trajPts['t'], trajPts['V']], layer='V', style='k-',
+                name='V')
+plotter.addData([trajPts['t'], trajPts['vinf']], layer='V', style='k:',
+                name='Vinf')
+
+plotter.addLayer('activs')
+plotter.addData([trajPts['t'], trajPts['Na.m']], layer='activs', style='g-',
+                name='m')
+plotter.addData([trajPts['t'], trajPts['Na.minf']], layer='activs', style='g--',
+                name='minf')
+
+plotter.addData([trajPts['t'], trajPts['K.n']], layer='activs', style='r-',
+                name='n')
+plotter.addData([trajPts['t'], trajPts['K.ninf']], layer='activs', style='r--',
+                name='ninf')
+
+plotter.addData([trajPts['t'], trajPts['tauv']], layer='activs', style='b:',
+                name='tauv')
+plotter.addData([trajPts['t'], trajPts['Na.taum']], layer='activs', style='g:',
+                name='taum')
+plotter.addData([trajPts['t'], trajPts['K.taun']], layer='activs', style='r:',
+                name='taun')
+
+plotter.show()
+```
+
+Using _diagnosticGUI.addDataPoints_:
+
+```python
+coorddict = {'V':
+                {'x':'t', 'y':'V','layer':'V','name':'V', 'style':'k-'},
+             'vinf':
+                {'x':'t', 'y':'vinf','layer':'V','name':'Vinf', 'style':'k:'},
+             'Na.m':
+                {'x':'t', 'y':'Na.m', 'layer':'activs', 'name':'minf', 'style':'g--'},
+             'Na.minf':
+                {'x':'t', 'y':'Na.minf', 'layer':'activs', 'name':'minf', 'style':'g--'},
+             'K.n':
+                {'x':'t', 'y':'K.n', 'layer':'activs', 'name':'n', 'style':'r-'},
+             'K.ninf':
+                {'x':'t', 'y':'K.ninf', 'layer':'activs', 'name':'ninf', 'style':'r--'},
+             'tauv':
+                {'x':'t', 'y':'tauv', 'layer':'activs','name':'tauv', 'style':'b:'},
+             'Na.taum':
+                {'x':'t', 'y':'Na.taum', 'layer':'activs','name':'taum', 'style':'g:'},
+             'K.taun':
+                {'x':'t', 'y':'K.taun', 'layer':'activs','name':'taun', 'style':'r:'}
+             }
+gui.addDataPoints(trajPts, coorddict = coorddict)
+
+gui.show()
+```
+
+Although learning to construct coorddicts properly takes a bit of effort, _addDataPoints_ simplifies the process of adding data to Fovea GUIs considerably, both by making the code more readable, and removing the need to _addLayer_ excessively. For more information on the Pointsets demonstrated in the above code snippets, see the Hodgkin-Huxley demo in HH_simple_demo.py in examples/HH_neuron.
 
 #####GUI vs. Plotter
 
