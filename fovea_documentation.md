@@ -94,13 +94,13 @@ From the user's perspective, Layers may be thought of as transparent slides that
 
 Layers currently support four different kinds: 'data', 'text', 'patch' and 'obj'. Each one has a corresponding plotter2D method for adding artist specifications to the list of instructions that is the layer structure.
 
-_addData_
+_addData_  
 Accepts a pair of sequences in [x, y] format (@param data), which are eventually converted into a matplotlib.lines.line2D in _buildLayer_ with a call to mpl's _plot()_ function. Given three numeric sequences [x, y, z] for @param data, _addData_ will create 3-dimensional data, but the 'projection' type of the axes must be set to '3d' in the call to plotter.arrangeFig for 3d plotting to work. A mpl.collections.LineCollection object can also be provided for @param data, in which case, _buildLayer_ will add an artist to the axes with .add_collection. 
 
-Add data is also unique in that calling this method will create a PyDSTool Trajectory object that underlies the data added. The internal method _.\_updateTraj()_ called by _addData()_ will convert @param trajs (a PyDSTool Pointset given to _addData_) into a Trajectory stored as a value in the .trajs field of the given layer's struct. If @param trajs is None, a traj is created with the PyDSTool method _numeric\_to\_traj_ from @param data. Trajs allow the snap callback (ISSUE: link?) to locate a point on the data.
+_addData_ is also unique in that calling this method will create a PyDSTool Trajectory object that underlies the data added. The internal method _.\_updateTraj()_ called by _addData()_ will convert @param trajs (a PyDSTool Pointset given to _addData_) into a Trajectory stored as a value in the .trajs field of the given layer's struct. If @param trajs is None, a traj is created with the PyDSTool method _numeric\_to\_traj_ from @param data. Trajs allow the snap callback (ISSUE: link?) to locate a point on the data.
 
 
-_addText_
+_addText_  
 Takes a string for @param text to be displayed at [x, y] coordinates @param data. The text will eventually be created on the given axes with a call to mpl's _.text()_ method. If @param use\_axis\_coords is True, the [x, y] position is treated as a fraction of the length of the x and y limits of the axes (i.e., @param data = [0.5, 0.5] will produce place the text in the center of the axes, [1, 0] in its bottom-right corner, [1, 1] in its top-right, etc.'). If use\_axis\_coords is false, the position of the text is simply at that position on the axes (so if you want to label a data point with a bit of text, they can have the same values for lay.data.data).
 
 _addPatch_  
@@ -339,7 +339,87 @@ The class customGUI initializes graphics.diagnosticGUI as its superclass with a 
 
 In some circumstances, it is necessary to create a custom object that subclasses diagnosticGUI. _diagnosticGUI.make\_gen()_ is a method for creating PyDSTool generator models, which may vary enormously in form, depending on the user's needs. As such, _make\_gen()_ is left empty and will raise a NotImplementedError if called by the global singleton gui. It is up the user to override this method (by defining in the subclass their own method of the same name), if they wish to associate their own PyDSTool model with the GUI. Similarly, _user\_nav\_func()_ will also be called when diagnosticGUI navigation keys (see next section, Callbacks) are pressed, even though it is left empty. The method is there to be overridden if some special behavior is desired during context object navigation.
 
-#####Callbacks
+#####Built-in Callbacks
+Once a GUI has been created, arranged, and supplied its data and artists, Fovea provides a number of analysis tools for users. These tools include _buttons_, _keypresses_ and _pickers_.  
+
+If _buildPlotter2D_ is called with @param basic_widgets = True, the figure is created with a number of general-purpose buttons that can be clicked by the user. They are:
+
+_save_  
+Saves the current figure as a .png image in the working directory. If the plotter is initialized with a diagnostic manager, it will save the image to the dm directory instead.  
+
+_capturePoint_  
+_back_  
+_refresh_  
+_showTree_  
+Prints the current graphical hierarchy to the command line, displaying the organization of artists, within layers, within figures.
+
+_timeBar_  
+This slider will appear if _buildPlotter2D_ is called with @param with_times = True. It can be used to increment or decrement the data's current time step. +dt and -dt buttons are also provided.
+
+If _buildPlotter2D_ is called with @param callbacks_on = True, a number of keypresses and pickers will be initialized for manipulating data as well:  
+
+_Lines (key: "l")_  
+Activates a line selector, then click and drag to create a line of interest (line_GUI). Lines can be repositioned with navigation keys or defined with PyDSTool Events. For more information on lines see the "Context Objects" section below.
+
+_Boxes (key: "b")_  
+Activates a box selector, then click and drag to create a box of interest (box_GUI). Lines can be repositioned with navigation keys or defined with PyDSTool Events. For more information on lines see the "Context Objects" section below.
+
+_Snap (key: "s")_  
+Activate with key press, then click near a Trajectory to "snap" a point to that trajectory. Finds the point on the trajectory nearest the click-coordinates and draws a Point2D artist there.
+
+_Grow Domain (key: ".")_  
+Activate and then click a seed point, followed by a radius point. Draws a polygon centered at the seed, which continues to expand as long as the points at the polygon edges satisfy a user defined "domain criterion function". The user function can be assigned as follows:
+
+```python
+gui.current_domain_handler.assign_criterion_func(my_func)
+```
+
+_User's Spatial Function (key: " ")_  
+Activate and click to return meta-data generated by a user created function at a given point. The meta-data consists of two dictionaries, one with scalar values and the other with vector values. Below is an example of a user created function for returning displacement vectors from datapoints to a clicked point (vector-valued dictionary) along with all their magnitudes (scalar-valued dictionary), and how to assign the user function to be seen by the keypress handler:
+
+```python
+def get_displacements(self, x, y):
+    """
+    For given x, y coord arguments, returns two dictionaries keyed
+    by datapoint number (1-N):
+    distance from (x, y) and displacement vector to (x, y)
+    """
+    print("Last output = (mag dict, vector dict)")
+    Fxs = []
+    Fys = []
+    Fs = []
+
+    try:
+        pts = self.data_dict['Y_projected']
+    except KeyError:
+        pts = self.data_dict['Y']
+
+    ixs = range(len(pts))
+    for i in ixs:
+        Fx = x - pts[i][0]
+        Fy = y - pts[i][1]
+        Fxs.append(Fx)
+        Fys.append(Fy)
+        Fs.append(sqrt(Fx*Fx+Fy*Fy))
+
+    return dict(zip(ixs, Fs)), dict(zip(ixs, zip(Fxs, Fys)))
+
+gui.assign_user_func(self.get_displacements)
+```
+
+ISSUE: Fovea provides most user hooks by creating an empty function to be overridden (e.g., user_nav_func), these should be replaced with assign_funcs like the ones above (or the assign_funcs should be replaced with overridable empty functions like user_nav_func) so the style remains consistent and easy to learn. It would probably make more sense to go with assign_funcs, as the overrides can only be used if the user wants to subclass diagnosticGUI.
+
+
+These callbacks will only work on subplots ...
+
+ISSUE: Only responds to not None. 
+
+####User Extensions
+
+####Context Objects
+
+#####User Functions
+
 
 ###2. domain2D.py
 In some applications, it may be necessary to monitor how the output of a function changes across the xy-plane. For instance, if a trajectory is being plotted through a vector field, the ability to highlight regions of the field where moving objects might get stuck could be invaluable.  _domain2D_ provides utilities for creating such "domains of interest" based on spatial variables in the xy-plane. It consists of two classes, _polygon\_domain_ and _GUI\_domain\_handler_, in addition to two functions, _edge\_lengths_ and _merge\_to\_polygon_.
