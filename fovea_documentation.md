@@ -127,6 +127,29 @@ _addHLine_
 
 Once the data and layer structures have been specified with calls to _plotter2D_'s different add methods, the graphics can finally be displayed with _buildLayer_. However, _plotter2d.show()_ will typically be the calling function of _buildLayer_, as it loops through each subplot in the arrangement and each layer in the figure applying all the changes specified by the different add and set methods. In summary, _addData_, _addText_, _addPatch_, and _addObj_ create specifications for graphical objects to be displayed, but the actual execution of these specifications occurs in _show()_.
 
+The properties of figures, layers, and data can be changed after having been added to the plotter using the _plotter2D_ "set" methods:
+
+_setFig_
+Sets the current figure to that named by @param label. kwargs can be included to adjust specific properties of the figure.
+
+_setLayer_
+Change the values of layer attributes with kwargs (e.g., style, handles, display). Note that _setDisplay()_ and _toggleDisplay()_ can also be used to change a layer's display attribute.
+
+_setData2_
+Change attributes associated with data. Currently Fovea includes two methods, _setData_ and _setData2_, but the original _setData_ will be phased out in a future version. The code snippet below illustrated the difference between calls to the two methods:
+
+OLD VERSION:
+```python
+gui.setData(layname, data={dname: {'data': [float_a, float_b], 'style':'b--', 'display': True}}, display=True)
+```
+
+NEW VERSION:
+```python
+gui.setData2(dname, layer= layname, data = [float_a, float_b], style = 'b--', display=True)
+```
+
+Whereas setData is essentially a repackaging of setLayer where the user must supply a new dictionary to update data, setData2 allows the user to change data attribute directly as keyword arguments.
+
 
 #####Adding PyDSTool Pointsets
 In the previous section, we saw how different _plotter2D_ add methods can be used to create the specifications of artists to be displayed in a Fovea GUI. Due to the importance of adding data to layers and the repition with which these methods will be called, the _diagnosticGUI_ method _addDataPoints()_ is included to add multiple different kinds of artist simultaneously. In other words, _diagnosticGUI.addDataPoints()_ attempts to translate any type of inputs it receives into the specifications in a layer's structure.
@@ -435,7 +458,7 @@ Any artist on a 2D subplot can be picked by clicking on or near them. When an ar
 ![GUI token objects shown on subplots](https://github.com/akuefler/akuefler.github.io/blob/master/images/gui_tokens.png?raw=true)
 
 **Class data\_GUI**  
-_data\_GUI_s are a redumentary object implementation of clicked data (e.g., artists added to layers of kind = 'data'). They wrap up important properties of data in one place for easy reference. For instance, after picking a data selected object, the name, layer and handle of that artist can be retrieved from gui.selected_object.name, gui.selected_object.layer, gui.selected_object.handle. 
+_data\_GUI_ s are a redumentary object implementation of clicked data (e.g., artists added to layers of kind = 'data'). They wrap up important properties of data in one place for easy reference. For instance, after picking a data selected object, the name, layer and handle of that artist can be retrieved from gui.selected_object.name, gui.selected_object.layer, gui.selected_object.handle. 
 
 Unlike context objects, data_GUIs are created the moment data are clicked, have no methods, and are forgotten about as soon as a new selected_object is clicked. They exist largely so that the functions for picking and setting selected objects behave consistently, whether data or context objects are picked. However, future versions of Fovea may flesh out this class with methods that provide more tools for handling data.
 
@@ -513,7 +536,7 @@ Note that the function name _key\_on()_ is the same used by Fovea's native key h
 The following functions are defined and called inside Fovea, but are left empty. They as hooks where users can patch in some additional behavior to Fovea functions that often require tailoring.
 
 _user\_update\_func:  
-Called in _shape\_GUI.update()_. Since _update_ is used to translate context objects, overriding _user\_update\_func_ with a custom function can be used to trigger events or calculations whenever a user moves a context object. For an example see (ISSUE: link? spike sort blog)
+Called in _shape\_GUI.update()_ . Since _update_ is used to translate context objects, overriding _user\_update\_func_ with a custom function can be used to trigger events or calculations whenever a user moves a context object. For an example see (ISSUE: link? spike sort blog)
 
 _user\_pick\_func:  
 Called in _diagnosticGUI.pick\_on()_. Although only one object can be set as the selected object at a time, a user might want to highlight other objects or perform calculations whenever one object is picked. _user\_pick\_func receives the pick event, from which properties can be retreived (such as event.artist for the picked artist). For an example see (ISSUE: link? spike sort blog)
