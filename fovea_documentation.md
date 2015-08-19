@@ -129,13 +129,13 @@ Once the data and layer structures have been specified with calls to _plotter2D_
 
 The properties of figures, layers, and data can be changed after having been added to the plotter using the _plotter2D_ "set" methods:
 
-_setFig_
+_setFig_  
 Sets the current figure to that named by @param label. kwargs can be included to adjust specific properties of the figure.
 
-_setLayer_
+_setLayer_  
 Change the values of layer attributes with kwargs (e.g., style, handles, display). Note that _setDisplay()_ and _toggleDisplay()_ can also be used to change a layer's display attribute.
 
-_setData2_
+_setData2_  
 Change attributes associated with data. Currently Fovea includes two methods, _setData_ and _setData2_, but the original _setData_ will be phased out in a future version. The code snippet below illustrated the difference between calls to the two methods:
 
 OLD VERSION:
@@ -182,7 +182,7 @@ coorddict = {'posx': {'x': 'posx', y': 'posy'}, 'velx': {'x':'velx', y':'vely'}}
 
 In addition to the 'x' and 'y' keywords already shown, the values of coorddict can be keyed with the following:
 
-_'name'_
+_'name'_  
 The name of the data structure to be added by the plotter.
 
 _'layer'_  
