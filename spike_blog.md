@@ -3,7 +3,7 @@
 In my previous post, I explored how Fovea can elucidate the process of picking the best number of dimensions to express multivariate data. As a corollary, I provided a bit of information about Principal Component Analysis (PCA) and showed off the geometry of this projection-based dimensionality reduction method. With these basics in place, we can turn to a fun application of PCA (and visual diagnostics) to a real problem in neuroscience. Namely, how do we determine which brain cells emit which spikes if we record a sample containing different signals?
 
 ##Background
-A multi-electrode array is a tiny bed of pin-like sensors driven into the soft jelly of the brain. Each pin (electrode) records electrical changes across the membrane of an individual neuron as a numerical value that dips and spikes as the cell hyper- and de-polarizes. Given that the array can contain tens or hundreds of electrodes, XYZ
+A multi-electrode array is a tiny bed of pin-like sensors driven into the soft jelly of the brain. Each pin (electrode) records electrical changes near individual neurons as a numerical value that dips and spikes as the cell hyper- and de-polarizes. Given that the array can contain tens or hundreds of electrodes, multi-electrode arrays collect matrix data describing voltage at many different points.
 
 Such direct recording of many cells is sometimes likened to lowering a series of microphones into a stadium during a sports game. Whereas low-resolution brain scans (e.g., fMRI, EEG) record the roar of the entire crowd, multi-electrode arrays pick out the voices of individual neurons. But even though we can aim our recorders at individuals, we’re still bound to pick up surrounding speakers. Neuroscientists run into a problem identifying Alice the neuron, when Bob and Carol are shouting nearby.
 
@@ -60,11 +60,82 @@ At this point, pressing the “up” and “down” arrow keys will translate th
 
 This threshold line is best thought of as a “knob” on our analysis. We turn the knob in this or that direction and see how the tweaks propagate to our final product.
 
-**Talk about user_update_func**
+To implement special behaviors when context objects (like _line\_GUI_s) are translated across the axes, we make use of Fovea’s new “user functions”. When we create a custom diagnosticGUI object (here called spikesorter) through subclassing, we have the option of overriding diagnosticGUI methods by defining functions of the same name. _user\_update\_func_ is an example of an empty method defined in diagnosticGUI for no other reason than to be overridden. It is called every time a context object is updated. So by defining  _user\_update\_func_ for spikesorter, we can patch in a bit of extra behavior:
+
+```python
+def user_update_func(self):
+    #We only want the thresholding behavior to occur when 'thresh' is the updated context object.
+    if self.selected_object.name is 'thresh':
+
+    #Ensure the threshold line is horizontal by checkking for 0 slope.
+    if self.selected_object.m != 0:
+        print("Make 'thresh' a horizontal threshold by pressing 'm'.")
+    return
+
+    #The numeric value of the threshold is 'thresh's y-intercept.
+    cutoff =  self.selected_object.b
+
+    traj_samp = self.traj.sample()['x']
+    r = traj_samp > cutoff
+    above_thresh = np.where(r == True)[0]
+
+    spike = []
+    spikes = []
+    crosses = []
+
+    #Recover list of lists of points on waveform above the threshold line.
+    last_i = above_thresh[0] - 1
+    for i in above_thresh:
+        if i - 1 != last_i:
+            crosses.append(i)
+            #Return x value of the highest y value.
+            spikes.append(spike)
+            spike = []
+    spike.append(i)
+    last_i = i
+
+    self.traj_samp = traj_samp
+    self.crosses = crosses
+    self.spikes = spikes
+
+    self.plotter.addData([self.crosses, [cutoff]*len(self.crosses)], layer='thresh_crosses', style='r*', name='crossovers', force= True)
+
+    self.show()
+```
 
 Once the threshold is positioned where we want it, the “d” key will detect spikes by locating each local maximum to the right of a cross-over. These maxima are the peaks of the action potentials and each is centered in its own _box\_GUI_ object created by spikesort.py. 
 
-**Talk about ssort keypress.**
+Unlike the “l” hot key, “d” is specific to our application. By writing a key handler method and attaching it to the canvas with mpl\_connect, it is easy to patch in new hot keys like this one. However, you must be careful not to reuse function names from Fovea, as they will be overridden. The following method is named ‘ssort_key_on’ (as opposed to ‘key_on’, used in diagnosticGUI) so that new key presses will be added to the old library of hot keys, rather than replacing it:
+
+```python
+def ssort_key_on(self, ev):
+    self._key = k = ev.key  # keep record of last keypress
+    fig_struct, fig = self.plotter._resolveFig(None)
+
+    if k== 'd':
+        #Draw bounding boxes around spikes found in user_update_func.
+        spikes = self.spikes
+        self.X = self.compute_bbox(spikes)
+
+        self.default_colors = {}
+
+        #Draw the spike profiles in the second subplot.
+        if len(self.X.shape) == 1:
+            self.default_colors['spike0'] = 'k'
+            self.addDataPoints([list(range(0, len(self.X))), self.X], layer= 'detected', style= self.default_colors['spike0']+'-', name= 'spike0', force= True)
+
+        else:
+            c= 0
+            for spike in self.X:
+                name = 'spike'+str(c)
+                self.default_colors[name] = 'k'
+                self.addDataPoints([list(range(0, len(spike))), spike], layer= 'detected', style= self.default_colors[name]+'-', name= name, force= True)
+                c += 1
+
+        self.plotter.auto_scale_domain(xcushion = 0, subplot = '12')
+        self.show()
+
+```
 
 Each _box\_GUI_ captures 64 milliseconds of neural data by default, but this value can be changed in the spikesort GUI itself. Just press “b” to create your own _box\_GUI_, give it the name “ref_box”, and the program will use its width as the new size for detecting spikes. This trick can be used in conjunction with the toolbar zoom to make very narrow bounding boxes to fit your detected spikes.
 
@@ -99,7 +170,7 @@ You may also notice that only the first and second PCs are fully drawn in, where
 ##Classification
 Two differences should stand out when projecting onto the first/second PCs rather than the second/third PCs. First, the data projected onto the first/second PCs should have a greater tendency to cluster.
 
-IMAGE (compare 4th subplots)
+IMAGE (compare_fourth_subplots.png)
 
 Second, when we introspect these clusters they should tend to be more cohesive than groupings that show up when projecting to the second/third PCs. In other words, if we look at only those detected spike profiles that go along with a given cluster, they should all look pretty similar to one another. We use a combination of key-presses and context objects to facilitate this process. Pressing “b”, we create _box\_GUI_s in the fourth subplot to fit around potential clusters of data point. When one of these bounding boxes is selected (in bold), we can then press either “1”, 2”, or “3” to color the points in that box red, green or blue, respectively (“0” returns them to black). The detected spike profiles will receive the new colors as well. Below, we see a few clusters grouped in this way:
 
@@ -109,7 +180,7 @@ Here, four distinct clusters have been picked out and they’re all fairly easy 
 
 On the other hand, projecting data onto the third/second PCs is less clean. Not only do the clusters seem less distinctive, but the spike profiles they group together don’t appear to have very much in common:
 
-IMAGE (colors_first_and_second.png)
+IMAGE (colors_third_and_second.png)
 
 My placement of bounding boxes on this projection was more arbitrary, as these clusters weren’t as clearly separated. Although some of the colorations accord with what we’d expect, in this projection the difference between the high-peaked “classic” spikes and the multi-unit noise we picked out from the previous example doesn’t come across (both are painted in black and belong to the large, blurry cluster in the middle). However, this projection isn’t entirely without merit. Consider the blue and green spikes. In the previous example, these were all bunched together into the same group. But it’s clear from this projection that although both sets have a distinctive V shape, for one group they precede the peak, and for the other, they follow it.
 
