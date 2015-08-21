@@ -27,7 +27,7 @@ _axes\_vars_
 List of strings labeling each axis.
 
 _handles_  
-Ordered Dictionary of mpl handles belonging to artists in the layer. The keys correspond to names of the data stored in the data field (i.e., they should have a one-to-one correspondence with layer_struct.data.keys after the artist has been drawn with a call to _buildLayer_), each valued with a single matplotlib object. An ordered dictionary is used to facilitate cycling between handles in a single layer with keypresses (see the section on navigation callbacks for more information) ISSUE: link?. ISSUE: Because it reuses the same keys as data, it may make more sense to store handles at the data-level, rather than the layer-level.
+Ordered Dictionary of mpl handles belonging to artists in the layer. The keys correspond to names of the data stored in the data field (i.e., they should have a one-to-one correspondence with layer_struct.data.keys after the artist has been drawn with a call to _buildLayer_), each valued with a single matplotlib object. An ordered dictionary is used to facilitate cycling between handles in a single layer with keypresses (see the section on navigation callbacks for more information). ISSUE: Because it reuses the same keys as data, it may make more sense to store handles at the data-level, rather than the layer-level.
 
 _trajs_  
 A dictionary of PyDSTool Trajectories belonging to artists in a layer. The keys correspond to names of the data stored in the 'data' field, each valued with a single PyDSTool Trajectory created by the internal function _\_updateTraj()_.
@@ -97,7 +97,7 @@ Layers currently support four different kinds: 'data', 'text', 'patch' and 'obj'
 _addData_  
 Accepts a pair of sequences in [x, y] format (@param data), which are eventually converted into a matplotlib.lines.line2D in _buildLayer_ with a call to mpl's _plot()_ function. Given three numeric sequences [x, y, z] for @param data, _addData_ will create 3-dimensional data, but the 'projection' type of the axes must be set to '3d' in the call to plotter.arrangeFig for 3d plotting to work. A mpl.collections.LineCollection object can also be provided for @param data, in which case, _buildLayer_ will add an artist to the axes with .add_collection. 
 
-_addData_ is also unique in that calling this method will create a PyDSTool Trajectory object that underlies the data added. The internal method _.\_updateTraj()_ called by _addData()_ will convert @param trajs (a PyDSTool Pointset given to _addData_) into a Trajectory stored as a value in the .trajs field of the given layer's struct. If @param trajs is None, a traj is created with the PyDSTool method _numeric\_to\_traj_ from @param data. Trajs allow the snap callback (ISSUE: link?) to locate a point on the data.
+_addData_ is also unique in that calling this method will create a PyDSTool Trajectory object that underlies the data added. The internal method _.\_updateTraj()_ called by _addData()_ will convert @param trajs (a PyDSTool Pointset given to _addData_) into a Trajectory stored as a value in the .trajs field of the given layer's struct. If @param trajs is None, a traj is created with the PyDSTool method _numeric\_to\_traj_ from @param data. Trajs allow the snap callback to locate a point on the data.
 
 
 _addText_  
@@ -508,7 +508,7 @@ gui.selected_object = gui.context_objects["my_object"]
 Assigning the .selected_object attribute directly will not update the data properties seen by _plotter2D_ and _buildLayer_.
 
 ####User Extensions
-Users will inevitably run into the need to define their own keypresses. Fortunately, matplotlib can be used to add these to a user defined subclass of diagnosticGUI with little interference to Fovea (assuming the keys chosen are not already built into Fovea). The code snippet below is a rough-and-ready template for a diagnosticGUI subclass key handler. A more detailed demo (including instructions for a vanilla diagnosticGUI) can be found at (ISSUE: link PCA blogpost?).
+Users will inevitably run into the need to define their own keypresses. Fortunately, matplotlib can be used to add these to a user defined subclass of diagnosticGUI with little interference to Fovea (assuming the keys chosen are not already built into Fovea). The code snippet below is a rough-and-ready template for a diagnosticGUI subclass key handler. A more detailed demo (including instructions for a vanilla diagnosticGUI) can be found at the [PCA Tutorial Blogpost](http://robclewley.github.io/pca_demo_with_fovea/).
 
 ```python
 class customGUI(graphics.diagnosticGUI):
@@ -536,10 +536,10 @@ Note that the function name _key\_on()_ is the same used by Fovea's native key h
 The following functions are defined and called inside Fovea, but are left empty. They as hooks where users can patch in some additional behavior to Fovea functions that often require tailoring.
 
 _user\_update\_func:  
-Called in _shape\_GUI.update()_ . Since _update_ is used to translate context objects, overriding _user\_update\_func_ with a custom function can be used to trigger events or calculations whenever a user moves a context object. For an example see (ISSUE: link? spike sort blog)
+Called in _shape\_GUI.update()_ . Since _update_ is used to translate context objects, overriding _user\_update\_func_ with a custom function can be used to trigger events or calculations whenever a user moves a context object. For an example see the spike sorting blogpost.
 
 _user\_pick\_func:  
-Called in _diagnosticGUI.pick\_on()_. Although only one object can be set as the selected object at a time, a user might want to highlight other objects or perform calculations whenever one object is picked. _user\_pick\_func receives the pick event, from which properties can be retreived (such as event.artist for the picked artist). For an example see (ISSUE: link? spike sort blog)
+Called in _diagnosticGUI.pick\_on()_. Although only one object can be set as the selected object at a time, a user might want to highlight other objects or perform calculations whenever one object is picked. _user\_pick\_func receives the pick event, from which properties can be retreived (such as event.artist for the picked artist).
 
 _make\_gen_:  
 Called in _diagnosticGUI.setup\_gen()_. Takes as input a dictionary of model parameters (@param pardict) and a model name (@param name) and creates a new generator model if one does not already exist. For an example, see examples/bombardier/fovea_game.py.
@@ -676,7 +676,7 @@ _axes\_vars_
 List of strings labeling each axis.
 
 _handles_  
-Ordered Dictionary of mpl handles belonging to artists in the layer. The keys correspond to names of the data stored in the data field (i.e., they should have a one-to-one correspondence with layer_struct.data.keys after the artist has been drawn with a call to _buildLayer_), each valued with a single matplotlib object. An ordered dictionary is used to facilitate cycling between handles in a single layer with keypresses (see the section on navigation callbacks for more information) ISSUE: link?. ISSUE: Because it reuses the same keys as data, it may make more sense to store handles at the data-level, rather than the layer-level.
+Ordered Dictionary of mpl handles belonging to artists in the layer. The keys correspond to names of the data stored in the data field (i.e., they should have a one-to-one correspondence with layer_struct.data.keys after the artist has been drawn with a call to _buildLayer_), each valued with a single matplotlib object. An ordered dictionary is used to facilitate cycling between handles in a single layer with keypresses (see the section on navigation callbacks for more information) 
 
 _trajs_  
 A dictionary of PyDSTool Trajectories belonging to artists in a layer. The keys correspond to names of the data stored in the 'data' field, each valued with a single PyDSTool Trajectory created by the internal function _\_updateTraj()_.
