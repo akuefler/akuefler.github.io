@@ -27,11 +27,11 @@ Fovea now supports the option of initializing a new diagnosticGUIs to be subclas
 
 ```python
 class spikesorter(graphics.diagnosticGUI):
-def __init__(self, title):
+    def __init__(self, title):
 
-#global plotter
-plotter = graphics.plotter2D()
-graphics.diagnosticGUI.__init__(self, plotter)
+    #global plotter
+    plotter = graphics.plotter2D()
+    graphics.diagnosticGUI.__init__(self, plotter)
 ```
 
 Instead of creating a ControlSys class to be juggled alongside the diagnosticGUI (as in pca_disc), spikesorter is a child of diagnosticGUI and can make use of all the plotting methods and attributes we’ve seen before.
@@ -64,43 +64,43 @@ To implement special behaviors when context objects (like _line\_GUI_s) are tran
 
 ```python
 def user_update_func(self):
-#We only want the thresholding behavior to occur when 'thresh' is the updated context object.
-if self.selected_object.name is 'thresh':
+    #We only want the thresholding behavior to occur when 'thresh' is the updated context object.
+    if self.selected_object.name is 'thresh':
 
-#Ensure the threshold line is horizontal by checkking for 0 slope.
-if self.selected_object.m != 0:
-print("Make 'thresh' a horizontal threshold by pressing 'm'.")
-return
+        #Ensure the threshold line is horizontal by checkking for 0 slope.
+        if self.selected_object.m != 0:
+            print("Make 'thresh' a horizontal threshold by pressing 'm'.")
+            return
 
-#The numeric value of the threshold is 'thresh's y-intercept.
-cutoff =  self.selected_object.b
+        #The numeric value of the threshold is 'thresh's y-intercept.
+        cutoff =  self.selected_object.b
 
-traj_samp = self.traj.sample()['x']
-r = traj_samp > cutoff
-above_thresh = np.where(r == True)[0]
+        traj_samp = self.traj.sample()['x']
+        r = traj_samp > cutoff
+        above_thresh = np.where(r == True)[0]
 
-spike = []
-spikes = []
-crosses = []
+        spike = []
+        spikes = []
+        crosses = []
 
-#Recover list of lists of points on waveform above the threshold line.
-last_i = above_thresh[0] - 1
-for i in above_thresh:
-if i - 1 != last_i:
-crosses.append(i)
-#Return x value of the highest y value.
-spikes.append(spike)
-spike = []
-spike.append(i)
-last_i = i
+        #Recover list of lists of points on waveform above the threshold line.
+        last_i = above_thresh[0] - 1
+        for i in above_thresh:
+            if i - 1 != last_i:
+                crosses.append(i)
+                #Return x value of the highest y value.
+                spikes.append(spike)
+                spike = []
+            spike.append(i)
+            last_i = i
 
-self.traj_samp = traj_samp
-self.crosses = crosses
-self.spikes = spikes
+        self.traj_samp = traj_samp
+        self.crosses = crosses
+        self.spikes = spikes
 
-self.plotter.addData([self.crosses, [cutoff]*len(self.crosses)], layer='thresh_crosses', style='r*', name='crossovers', force= True)
+        self.plotter.addData([self.crosses, [cutoff]*len(self.crosses)], layer='thresh_crosses', style='r*', name='crossovers', force= True)
 
-self.show()
+        self.show()
 ```
 
 Once the threshold is positioned where we want it, the “d” key will detect spikes by locating each local maximum to the right of a cross-over. These maxima are the peaks of the action potentials and each is centered in its own _box\_GUI_ object created by spikesort.py. 
@@ -109,31 +109,31 @@ Unlike the “l” hot key, “d” is specific to our application. By writing a
 
 ```python
 def ssort_key_on(self, ev):
-self._key = k = ev.key  # keep record of last keypress
-fig_struct, fig = self.plotter._resolveFig(None)
+    self._key = k = ev.key  # keep record of last keypress
+    fig_struct, fig = self.plotter._resolveFig(None)
 
-if k== 'd':
-#Draw bounding boxes around spikes found in user_update_func.
-spikes = self.spikes
-self.X = self.compute_bbox(spikes)
+    if k== 'd':
+        #Draw bounding boxes around spikes found in user_update_func.
+        spikes = self.spikes
+        self.X = self.compute_bbox(spikes)
 
-self.default_colors = {}
+        self.default_colors = {}
 
-#Draw the spike profiles in the second subplot.
-if len(self.X.shape) == 1:
-self.default_colors['spike0'] = 'k'
-self.addDataPoints([list(range(0, len(self.X))), self.X], layer= 'detected', style= self.default_colors['spike0']+'-', name= 'spike0', force= True)
+    #Draw the spike profiles in the second subplot.
+    if len(self.X.shape) == 1:
+        self.default_colors['spike0'] = 'k'
+        self.addDataPoints([list(range(0, len(self.X))), self.X], layer= 'detected', style= self.default_colors['spike0']+'-', name= 'spike0', force= True)
 
-else:
-c= 0
-for spike in self.X:
-name = 'spike'+str(c)
-self.default_colors[name] = 'k'
-self.addDataPoints([list(range(0, len(spike))), spike], layer= 'detected', style= self.default_colors[name]+'-', name= name, force= True)
-c += 1
+    else:
+        c= 0
+        for spike in self.X:
+            name = 'spike'+str(c)
+            self.default_colors[name] = 'k'
+            self.addDataPoints([list(range(0, len(spike))), spike], layer= 'detected', style= self.default_colors[name]+'-', name= name, force= True)
+            c += 1
 
-self.plotter.auto_scale_domain(xcushion = 0, subplot = '12')
-self.show()
+    self.plotter.auto_scale_domain(xcushion = 0, subplot = '12')
+    self.show()
 
 ```
 Once the threshold is positioned where we want it, the “d” key will detect spikes by locating each local maximum to the right of a cross-over. These maxima are the peaks of the action potentials and each is centered in its own _box\_GUI_ object created by spikesort.py. 
@@ -193,3 +193,4 @@ In addition to exploring a real-world use case, this post lays out lots of new F
 ##Links
 [Realistic simulation of extracellular recordings](https://www.cs.princeton.edu/picasso/mats/PCA-Tutorial-Intuition_jp.pdf)
 [Martinez, Pedreira, Ison, & Quiroga's simulated data](http://www2.le.ac.uk/departments/engineering/research/bioengineering/neuroengineering-lab/software)
+[Helpful paper on spike sorting by Michael S. Lewicki](http://stat.columbia.edu/~liam/teaching/neurostat-fall13/papers/EM/Lewicki-Network-98_1.pdf)
