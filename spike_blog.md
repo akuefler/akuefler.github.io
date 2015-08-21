@@ -191,6 +191,8 @@ Although the literature on classification algorithms is extensive, the fact that
 
 In addition to exploring a real-world use case, this post lays out lots of new Fovea tools resulting from our work during Google Summer of Code 2015. We’ve seen how subclassing diagnosticGUI can produce more complicated programs and let us tailor Fovea’s behavior with user function overrides. We also took a look at built-in key presses, picking selected objects with the mouse-clicks, and some applications for the _line\_GUI_ and _box\_GUI_ context objects.
 ##Links
-[Realistic simulation of extracellular recordings](https://www.cs.princeton.edu/picasso/mats/PCA-Tutorial-Intuition_jp.pdf)
-[Martinez, Pedreira, Ison, & Quiroga's simulated data](http://www2.le.ac.uk/departments/engineering/research/bioengineering/neuroengineering-lab/software)
+[Realistic simulation of extracellular recordings](https://www.cs.princeton.edu/picasso/mats/PCA-Tutorial-Intuition_jp.pdf)  
+
+[Martinez, Pedreira, Ison, & Quiroga's simulated data](http://www2.le.ac.uk/departments/engineering/research/bioengineering/neuroengineering-lab/software)  
+
 [Helpful paper on spike sorting by Michael S. Lewicki](http://stat.columbia.edu/~liam/teaching/neurostat-fall13/papers/EM/Lewicki-Network-98_1.pdf)
