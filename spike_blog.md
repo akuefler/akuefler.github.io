@@ -98,7 +98,8 @@ def user_update_func(self):
         self.crosses = crosses
         self.spikes = spikes
 
-        self.plotter.addData([self.crosses, [cutoff]*len(self.crosses)], layer='thresh_crosses', style='r*', name='crossovers', force= True)
+        self.plotter.addData([self.crosses, [cutoff]*len(self.crosses)], layer='thresh_crosses',
+            style='r*', name='crossovers', force= True)
 
         self.show()
 ```
@@ -122,14 +123,16 @@ def ssort_key_on(self, ev):
     #Draw the spike profiles in the second subplot.
     if len(self.X.shape) == 1:
         self.default_colors['spike0'] = 'k'
-        self.addDataPoints([list(range(0, len(self.X))), self.X], layer= 'detected', style= self.default_colors['spike0']+'-', name= 'spike0', force= True)
+        self.addDataPoints([list(range(0, len(self.X))), self.X], layer= 'detected', 
+            style= self.default_colors['spike0']+'-', name= 'spike0', force= True)
 
     else:
         c= 0
         for spike in self.X:
             name = 'spike'+str(c)
             self.default_colors[name] = 'k'
-            self.addDataPoints([list(range(0, len(spike))), spike], layer= 'detected', style= self.default_colors[name]+'-', name= name, force= True)
+            self.addDataPoints([list(range(0, len(spike))), spike], layer= 'detected', 
+                style= self.default_colors[name]+'-', name= name, force= True)
             c += 1
 
     self.plotter.auto_scale_domain(xcushion = 0, subplot = '12')
