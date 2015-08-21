@@ -136,6 +136,7 @@ def ssort_key_on(self, ev):
         self.show()
 
 ```
+Once the threshold is positioned where we want it, the “d” key will detect spikes by locating each local maximum to the right of a cross-over. These maxima are the peaks of the action potentials and each is centered in its own _box\_GUI_ object created by spikesort.py. 
 
 Each _box\_GUI_ captures 64 milliseconds of neural data by default, but this value can be changed in the spikesort GUI itself. Just press “b” to create your own _box\_GUI_, give it the name “ref_box”, and the program will use its width as the new size for detecting spikes. This trick can be used in conjunction with the toolbar zoom to make very narrow bounding boxes to fit your detected spikes.
 
@@ -189,9 +190,7 @@ Although the literature on classification algorithms is extensive, the fact that
 ##Conclusion
 
 In addition to exploring a real-world use case, this post lays out lots of new Fovea tools resulting from our work during Google Summer of Code 2015. We’ve seen how subclassing diagnosticGUI can produce more complicated programs and let us tailor Fovea’s behavior with user function overrides. We also took a look at built-in key presses, picking selected objects with the mouse-clicks, and some applications for the _line\_GUI_ and _box\_GUI_ context objects.
-
 ##Links
 [Realistic simulation of extracellular recordings](https://www.cs.princeton.edu/picasso/mats/PCA-Tutorial-Intuition_jp.pdf)
 [Martinez, Pedreira, Ison, & Quiroga's simulated data](http://www2.le.ac.uk/departments/engineering/research/bioengineering/neuroengineering-lab/software)
-
 
